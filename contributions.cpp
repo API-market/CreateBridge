@@ -198,7 +198,7 @@ public:
      * 3. Remove the duplicate indices 
      * 4. Chooses the contributors which have created accounts < total accounts until the max contribution upto 100% is reached
      */
-    vector<balances::chosen_contributors> getContributors(string origin, uint64_t seed, uint64_t to, asset ram){
+    vector<balances::chosen_contributors> getContributors(string origin, string memo, uint64_t seed, uint64_t to, asset ram){
         balances::Balances balances(createbridge, createbridge.value);
         auto iterator = balances.find(common::toUUID(origin));
 
@@ -237,7 +237,7 @@ public:
         // choose the contributors to get the total contributions for RAM as close to 100% as possible
         while(total_ram_contribution < max_ram_contribution && i < final_size){
             //check if the total account creation limit has been reached for a contributor
-            if(final_contributors[i].createdaccounts < final_contributors[i].totalaccounts || final_contributors[i].totalaccounts == -1){
+            if((final_contributors[i].createdaccounts < final_contributors[i].totalaccounts || final_contributors[i].totalaccounts == -1) && final_contributors[i].contributor != name(memo)){
 
                 int ram_contribution = findRamContribution(origin, final_contributors[i].contributor);
                 total_ram_contribution += ram_contribution;
