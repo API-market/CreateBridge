@@ -106,8 +106,7 @@ public:
                     itr->createdaccounts += 1;
                 }
             } else {
-                auto msg = "The account " + memo + "not found as one of the contributors for " + origin; 
-                eosio_assert(false, msg.c_str());
+                eosio_assert(false, ("The account " + memo + "not found as one of the contributors for " + origin).c_str());
             }
         });
     }
