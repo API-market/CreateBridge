@@ -125,6 +125,10 @@ public:
 
         name newAccountContract = common::getNewAccountContract();
 
+        // stake (not transfer) tokens for CPU and Net
+        // TODO: make this staked amount also come from the balances of the contributors
+        bool transfer = false;
+
         action(
             permission_level{ createbridge, "active"_n },
             newAccountContract,
@@ -143,7 +147,7 @@ public:
             permission_level{ createbridge, "active"_n },
             newAccountContract,
             name("delegatebw"),
-            make_tuple(createbridge, account, net, cpu, true)
+            make_tuple(createbridge, account, net, cpu, transfer)
         ).send();
     };
 
