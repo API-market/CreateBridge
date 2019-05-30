@@ -8,7 +8,7 @@ namespace registry{
         asset       limit;
     };
 
-    struct [[eosio::table, eosio::contract("oreorebridge")]] registry {
+    struct [[eosio::table, eosio::contract("aikonworbli1")]] registry {
         name owner;
         string dapp;
         uint64_t ram_bytes;           

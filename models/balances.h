@@ -1,7 +1,7 @@
 #pragma once
 namespace balances {
     
-    struct [[eosio::table, eosio::contract("oreorebridge")]] contributors {
+    struct [[eosio::table, eosio::contract("aikonworbli1")]] contributors {
         name contributor;
         asset balance;
         int ram;   // percentage of ram cost the contributor wants to fund
@@ -14,7 +14,7 @@ namespace balances {
         asset rampay; // amount the contributor is contributing towards RAM cost for new account 
     };
     
-    struct [[eosio::table, eosio::contract("oreorebridge")]] balances {
+    struct [[eosio::table, eosio::contract("aikonworbli1")]] balances {
         uint64_t memo;
         vector<contributors> contributors;
         asset balance;

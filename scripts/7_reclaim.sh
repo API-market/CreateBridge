@@ -15,4 +15,4 @@ ORIGIN=${2:-test.com}
 CONTRIBUTOR=${3:-contributor1}
 
 # reclaim
-cleos push action oreorebridge reclaim '["'$CONTRIBUTOR'","'$ORIGIN'","'$CHAIN_SYMBOL'"]' -p $CONTRIBUTOR
+cleos push action aikonworbli1 reclaim '["'$CONTRIBUTOR'","'$ORIGIN'","'$CHAIN_SYMBOL'"]' -p $CONTRIBUTOR

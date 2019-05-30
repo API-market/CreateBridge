@@ -15,4 +15,4 @@ DAPP_OWNER=${2:-eosio}
 TOKEN=${3:-EX}
 
 # reclaim dapp tokens
-cleos push action oreorebridge reclaim '["'$DAPP_OWNER'","'$ORIGIN'","'$TOKEN'"]' -p $DAPP_OWNER
+cleos push action aikonworbli1 reclaim '["'$DAPP_OWNER'","'$ORIGIN'","'$TOKEN'"]' -p $DAPP_OWNER

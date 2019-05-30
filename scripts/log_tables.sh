@@ -5,22 +5,22 @@ source ~/.bash_aliases
 
 echo "-------------------"
 echo "Balances"
-cleos get table oreorebridge oreorebridge balances
+cleos get table aikonworbli1 aikonworbli1 balances
 echo ""
 echo ""
 
 echo "Contributors"
-cleos get table oreorebridge oreorebridge contributors
+cleos get table aikonworbli1 aikonworbli1 contributors
 echo ""
 echo ""
 
 echo "Registry"
-cleos get table oreorebridge oreorebridge registry
+cleos get table aikonworbli1 aikonworbli1 registry
 echo ""
 echo ""
 
 echo "Token"
-cleos get table oreorebridge oreorebridge token
+cleos get table aikonworbli1 aikonworbli1 token
 echo ""
 echo ""
 echo "-------------------"

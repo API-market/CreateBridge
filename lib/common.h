@@ -9,7 +9,7 @@ using std::vector;
 
 namespace common {
     static const symbol S_RAM = symbol("RAMCORE", 4);
-    static const name createbridge = name("oreorebridge");
+    static const name createbridge = name("aikonworbli1");
     inline static uint64_t toUUID(string username){
         return std::hash<string>{}(username);
     }
@@ -49,7 +49,7 @@ namespace common {
     /***                                        ***/
     /**********************************************/
 
-    struct [[eosio::table, eosio::contract("oreorebridge")]] token {
+    struct [[eosio::table, eosio::contract("aikonworbli1")]] token {
         symbol S_SYS;
         name   newaccountcontract;
         uint64_t min_ram;
@@ -110,15 +110,15 @@ namespace common {
      */
 
     asset getRamCost(uint64_t ram_bytes){
-       RamInfo ramInfo(name("eosio"), name("eosio").value);
-       auto ramData = ramInfo.find(S_RAM.raw());
+    //    RamInfo ramInfo(name("eosio"), name("eosio").value);
+    //    auto ramData = ramInfo.find(S_RAM.raw());
        symbol coreSymbol = getCoreSymbol();
-       eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
+    //    eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
 
-       uint64_t base = ramData->base.balance.amount;
-       print("\nbase\n");
-       print(std::to_string(base));
-       uint64_t quote = ramData->quote.balance.amount;
-       return asset((((double)quote / base))*ram_bytes, coreSymbol);
+    //    uint64_t base = ramData->base.balance.amount;
+    //    print("\nbase\n");
+    //    print(std::to_string(base));
+    //    uint64_t quote = ramData->quote.balance.amount;
+       return asset(124'0000, coreSymbol);
     }
 };

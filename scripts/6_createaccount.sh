@@ -16,7 +16,7 @@ DAPP_OWNER=${3:-eosio}
 CUSTODIAN_ACCOUNT=${4:-appcustodian}
 
 # Custodian account creates the new account
-cleos push action oreorebridge create '["'$CUSTODIAN_ACCOUNT'","'$NAME'","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","'$ORIGIN'"]' -p $CUSTODIAN_ACCOUNT
+cleos push action aikonworbli1 create '["'$CUSTODIAN_ACCOUNT'","'$NAME'","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","'$ORIGIN'"]' -p $CUSTODIAN_ACCOUNT
 
 # Uncomment the below command if you want the dapp owner to create the new account
-# cleos push action oreorebridge create '["'$DAPP_OWNER'","'$NAME'","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","'$ORIGIN'"]' -p $DAPP_OWNER
+# cleos push action aikonworbli1 create '["'$DAPP_OWNER'","'$NAME'","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV","'$ORIGIN'"]' -p $DAPP_OWNER

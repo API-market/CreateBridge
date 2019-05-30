@@ -10,12 +10,12 @@ source ~/.bash_aliases
 #            4. MINIMUM_RAM:            minimum bytes of RAM to put in a new account created on the chain 
 
 #NOTE: This script assumes that you have the keys for createbridge account in your unlocked wallet
-
-CHAIN_SYMBOL=${1:-EOS}
+alias cleosworbli='cleos -u https://worbli-testnet.eosblocksmith.io'
+CHAIN_SYMBOL=${1:-WBI}
 SYMBOL_PRECISION=${2:-4}
 NEWACCOUNT_CONTRACT=${3:-eosio}
 MINIMUM_RAM=${4:-4096}
 
 # specify the chain symbol and the contract name to call for new account action 
-cleos push action oreorebridge init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$MINIMUM_RAM'"]' -p oreorebridge
+cleosworbli push action aikonworbli1 init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$MINIMUM_RAM'"]' -p aikonworbli1
 
