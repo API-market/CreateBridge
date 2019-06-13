@@ -53,6 +53,7 @@ namespace common {
         symbol S_SYS;
         name   newaccountcontract;
         uint64_t min_ram;
+        string chainNetwork;
         uint64_t primary_key()const { return S_SYS.raw(); }
     };
 
@@ -65,6 +66,11 @@ namespace common {
     symbol getCoreSymbol(){
         Token token(createbridge, createbridge.value);
         return token.begin()->S_SYS;
+    }
+
+    string getChainName(){
+        Token token(createbridge, createbridge.value);
+        return token.begin()->chainName;
     }
 
     /***
@@ -105,20 +111,43 @@ namespace common {
 
     typedef eosio::multi_index<"rammarket"_n, rammarket> RamInfo;
 
+    struct oreprice
+   {
+      uint64_t key;
+      asset createprice;            // newaccount price as ORE
+      uint64_t rambytes;            // initial amount of ram
+      asset netamount;              // initial amount of net
+      asset cpuamount;              // initial amount of cpu
+      uint64_t bwpricerate;         // ORE to SYS ratio for system resource delegations
+
+      uint64_t primary_key() const { return key; }
+   };
+
+   typedef eosio::multi_index<"oreprice"_n, oreprice> orePriceTable;
+
     /***
      * Returns the price of ram for given bytes
      */
 
-    asset getRamCost(uint64_t ram_bytes){
-       RamInfo ramInfo(name("eosio"), name("eosio").value);
-       auto ramData = ramInfo.find(S_RAM.raw());
-       symbol coreSymbol = getCoreSymbol();
-       eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
+    asset getRamCost(uint64_t ram_bytes, string chainName){
+       asset ramcost;
+        
+       if(chainName == "eos"){
+            RamInfo ramInfo(name("eosio"), name("eosio").value);
+            auto ramData = ramInfo.find(S_RAM.raw());
+            symbol coreSymbol = getCoreSymbol();
+            eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
 
-       uint64_t base = ramData->base.balance.amount;
-       print("\nbase\n");
-       print(std::to_string(base));
-       uint64_t quote = ramData->quote.balance.amount;
-       return asset((((double)quote / base))*ram_bytes, coreSymbol);
+            uint64_t base = ramData->base.balance.amount;
+            print("\nbase\n");
+            print(std::to_string(base));
+            uint64_t quote = ramData->quote.balance.amount;
+            ramcost = asset((((double)quote / base))*ram_bytes, coreSymbol);
+       } else if ( chainName == "ore") {
+           RamInfo ramInfo(name("oresystem"), name("oresystem").value);
+           auto orePrice = orePriceTable.find(name("ore").value);
+           ramcost = orePrice->createprice;
+       }
+       return ramcost;  
     }
 };

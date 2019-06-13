@@ -124,6 +124,7 @@ public:
         };
 
         name newAccountContract = common::getNewAccountContract();
+<<<<<<< Updated upstream
 
         // stake (not transfer) tokens for CPU and Net
         // TODO: make this staked amount also come from the balances of the contributors
@@ -149,6 +150,39 @@ public:
             name("delegatebw"),
             make_tuple(createbridge, account, net, cpu, transfer)
         ).send();
+=======
+        string chainName = common::getChainName();
+
+        if(chainName == "ore"){
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("createoreacc"),
+                new_account
+            ).send();
+        } else {
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("newaccount"),
+                new_account
+            ).send();
+
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("buyram"),
+                make_tuple(createbridge, account, ram)
+            ).send();
+
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("delegatebw"),
+                make_tuple(createbridge, account, net, cpu, true)
+            ).send();
+        }
+>>>>>>> Stashed changes
     };
 
 };

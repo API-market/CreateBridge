@@ -57,7 +57,7 @@ public:
      * newAccountContract:  the contract to call for new account action 
      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
     */
-    ACTION init(const symbol& symbol, name newaccountcontract, uint64_t minimumram){
+    ACTION init(const symbol& symbol, name newaccountcontract, uint64_t minimumram, string chainNetwork){
         require_auth(_self);
 
         auto iterator = token.find(symbol.raw());
@@ -66,10 +66,12 @@ public:
             row.S_SYS = symbol;
             row.newaccountcontract = newaccountcontract;
             row.min_ram = minimumram;
+            row.chainNetwork = chainNetwork;
         }); else token.modify(iterator, same_payer, [&](auto& row){
             row.S_SYS = symbol;
             row.newaccountcontract = newaccountcontract;
             row.min_ram = minimumram;
+            row.chainNetwork = chainNetwork;
         });    
     }
 
@@ -93,6 +95,7 @@ public:
                 ("the dapp " + dapp + " is already registered by another account").c_str());
 
         uint64_t min_ram = getMinimumRAM();
+        string chainName = getChainName();
 
         eosio_assert(ram_bytes >= min_ram, ("ram for new accounts must be equal to or greater than " + to_string(min_ram) + " bytes.").c_str());
 
