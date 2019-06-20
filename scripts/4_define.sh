@@ -28,10 +28,11 @@ AIRDROP_TOKEN_CONTRACT=${6:-exampletoken}
 AIRDROP_TOKEN_TOTAL=${7:-'1000.0000 EX'}
 AIRDROP_TOKEN_LIMIT=${8:-'10.0000 EX'}
 CUSTODIAN_ACCOUNT=${9:-appcustodian}
+PRICE_KEY=${10:-1}
 
 # app registration
 AIRDROP_JSON='{"contract":"'$AIRDROP_TOKEN_CONTRACT'", "tokens":"'$AIRDROP_TOKEN_TOTAL'", "limit":"'$AIRDROP_TOKEN_LIMIT'"}'
-PARAMS_JSON='{"owner":"'$DAPP_OWNER'", "dapp":"'$ORIGIN'", "ram_bytes":"'$RAM_BYTES'", "net":"'$NET'", "cpu":"'$CPU'", "airdrop":'$AIRDROP_JSON'}'
+PARAMS_JSON='{"owner":"'$DAPP_OWNER'", "dapp":"'$ORIGIN'", "ram_bytes":"'$RAM_BYTES'", "net":"'$NET'", "cpu":"'$CPU'", "airdrop":'$AIRDROP_JSON', "price_key":'$PRICE_KEY'}'
 #PARAMS_JSON='{"owner":"'$DAPP_OWNER'", "dapp":"'$ORIGIN'", "ram":"'$RAM'", "net":"'$NET'", "cpu":"'$CPU'", "airdrop":null}'
 cleos push action createbridge define "$PARAMS_JSON" -p $DAPP_OWNER
 

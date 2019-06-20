@@ -57,7 +57,7 @@ public:
      * newAccountContract:  the contract to call for new account action 
      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
     */
-    ACTION init(const symbol& symbol, name newaccountcontract, uint64_t minimumram){
+    ACTION init(const symbol& symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram){
         require_auth(_self);
 
         auto iterator = token.find(symbol.raw());
@@ -65,10 +65,12 @@ public:
         if(iterator == token.end())token.emplace(_self, [&](auto& row){
             row.S_SYS = symbol;
             row.newaccountcontract = newaccountcontract;
+            row.newaccountaction = newaccountaction;
             row.min_ram = minimumram;
         }); else token.modify(iterator, same_payer, [&](auto& row){
             row.S_SYS = symbol;
             row.newaccountcontract = newaccountcontract;
+            row.newaccountaction = newaccountaction;
             row.min_ram = minimumram;
         });    
     }
@@ -84,7 +86,7 @@ public:
      * Only the owner account/whitelisted account will be able to create new user account for the dapp
      */ 
 
-    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, airdropdata& airdrop) {
+    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, airdropdata& airdrop, uint64_t pricekey = 0) {
         require_auth(dapp != "free" ? owner : _self);
 
         auto iterator = dapps.find(toUUID(dapp));
@@ -100,6 +102,7 @@ public:
         if(iterator == dapps.end()) dapps.emplace(_self, [&](auto& row){
             row.owner = owner;
             row.dapp = dapp;
+            row.pricekey = pricekey;
             row.ram_bytes = ram_bytes;
             row.net = net;
             row.cpu = cpu;
@@ -109,6 +112,7 @@ public:
         // Updating an existing dapp reference's configurations
         else dapps.modify(iterator, same_payer, [&](auto& row){
             row.ram_bytes = ram_bytes;
+            row.pricekey = pricekey;
             row.net = net;
             row.cpu = cpu;
             row.airdrop = airdrop;

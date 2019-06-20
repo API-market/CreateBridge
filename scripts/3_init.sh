@@ -14,8 +14,9 @@ source ~/.bash_aliases
 CHAIN_SYMBOL=${1:-EOS}
 SYMBOL_PRECISION=${2:-4}
 NEWACCOUNT_CONTRACT=${3:-eosio}
-MINIMUM_RAM=${4:-4096}
+NEWACCOUNT_ACTION=${4:-createoreacc}
+MINIMUM_RAM=${5:-4096}
 
 # specify the chain symbol and the contract name to call for new account action 
-cleos push action createbridge init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$MINIMUM_RAM'"]' -p createbridge
+cleos push action createbridge init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$NEWACCOUNT_ACTION'","'$MINIMUM_RAM'"]' -p createbridge
 

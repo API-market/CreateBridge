@@ -9,7 +9,7 @@ using std::vector;
 
 namespace common {
     static const symbol S_RAM = symbol("RAMCORE", 4);
-    static const name createbridge = name("createbridge");
+    static const name createbridgeName = name("createbridge");
 
     inline static uint64_t toUUID(string username){
         return std::hash<string>{}(username);
@@ -53,6 +53,7 @@ namespace common {
     struct [[eosio::table, eosio::contract("createbridge")]] token {
         symbol S_SYS;
         name   newaccountcontract;
+        name  newaccountaction;
         uint64_t min_ram;
         uint64_t primary_key()const { return S_SYS.raw(); }
     };
@@ -64,7 +65,7 @@ namespace common {
      * @return
      */
     symbol getCoreSymbol(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->S_SYS;
     }
 
@@ -72,15 +73,20 @@ namespace common {
      * Returns the contract name for new account action
      */
     name getNewAccountContract(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->newaccountcontract;
+    }
+
+    name getNewAccountAction(){
+        Token token(createbridgeName, createbridgeName.value);
+        return token.begin()->newaccountaction;
     }
 
     /**
      * Returns the minimum bytes of RAM for new account creation
      */
     uint64_t getMinimumRAM(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->min_ram;
     }
 
@@ -104,22 +110,61 @@ namespace common {
         uint64_t primary_key()const { return supply.symbol.raw(); }
     };
 
+    struct pricetable
+    {
+        uint64_t key;
+        asset createprice;            // newaccount price as ORE
+        uint64_t rambytes;            // initial amount of ram
+        asset netamount;              // initial amount of net
+        asset cpuamount;              // initial amount of cpu
+        uint64_t bwpricerate;         // ORE to SYS ratio for system resource delegations
+
+        uint64_t primary_key() const { return key; }
+    };
+
+   typedef eosio::multi_index<"pricetable"_n, pricetable> priceTable; 
+
     typedef eosio::multi_index<"rammarket"_n, rammarket> RamInfo;
 
     /***
      * Returns the price of ram for given bytes
      */
 
-    asset getRamCost(uint64_t ram_bytes){
-       RamInfo ramInfo(name("eosio"), name("eosio").value);
-       auto ramData = ramInfo.find(S_RAM.raw());
-       symbol coreSymbol = getCoreSymbol();
-       eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
+    asset getRamCost(uint64_t ram_bytes, uint64_t priceKey = 0){
+       asset ramcost;
+       if(ram_bytes){
+            RamInfo ramInfo(name("eosio"), name("eosio").value);
+            auto ramData = ramInfo.find(S_RAM.raw());
+            symbol coreSymbol = getCoreSymbol();
+            eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
 
-       uint64_t base = ramData->base.balance.amount;
-       print("\nbase\n");
-       print(std::to_string(base));
-       uint64_t quote = ramData->quote.balance.amount;
-       return asset((((double)quote / base))*ram_bytes, coreSymbol);
+            uint64_t base = ramData->base.balance.amount;
+            print("\nbase\n");
+            print(std::to_string(base));
+            uint64_t quote = ramData->quote.balance.amount;
+            ramcost = asset((((double)quote / base))*ram_bytes, coreSymbol);
+       } else {
+            Token token(createbridgeName, createbridgeName.value);
+            auto itr = token.find(S_RAM.raw());
+            name newaccountcontract = getNewAccountContract();
+            priceTable price(newaccountcontract, newaccountcontract.value);
+            auto priceItr = price.find(priceKey);
+            ramcost = priceItr->createprice - (priceItr->netamount + priceItr->cpuamount);
+       }
+       return ramcost;  
+    }
+
+    asset getFixedCpu(uint64_t priceKey) {
+        name newaccountcontract = getNewAccountContract();
+        priceTable price(newaccountcontract, newaccountcontract.value);
+        auto priceItr = price.find(priceKey);
+        return priceItr->cpuamount;
+    }
+
+    asset getFixedNet(uint64_t priceKey) {
+        name newaccountcontract = getNewAccountContract();
+        priceTable price(newaccountcontract, newaccountcontract.value);
+        auto priceItr = price.find(priceKey);
+        return priceItr->netamount;
     }
 };

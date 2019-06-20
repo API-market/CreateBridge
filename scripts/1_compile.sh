@@ -10,7 +10,7 @@ source ~/.bash_aliases
 # - 3. CONTRACT_ACCOUNT: The name of the contract account to set the contract to
 
 CONTRACT_NAME=${1:-createbridge}
-OUTPUT_DIR=${2:-~/contracts}
+OUTPUT_DIR=${2:-../build}
 CONTRACT_ACCOUNT=${3:-createbridge}
 
 echo ${CONTRACT_NAME}

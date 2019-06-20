@@ -15,7 +15,7 @@ using namespace std;
 class createaccounts : public contributions, public airdrops{
 
 public:
-    name createbridge = common::createbridge;
+    name createbridge = common::createbridgeName;
 
     /***
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
@@ -43,9 +43,18 @@ public:
         // cost of required ram
         asset ram = common::getRamCost(ram_bytes);
         
+        asset net;
+        asset cpu;
+
+        if(ram_bytes) {
+            net = iterator->net;
+            cpu = iterator->cpu;
+        } else {
+            net = common::getFixedNet(iterator->pricekey);
+            cpu = common::getFixedCpu(iterator->pricekey);
+        }
+
         asset ramFromPayer = ram;
-        asset net = iterator->net;
-        asset cpu = iterator->cpu;
 
         if(memo != origin && contributions::hasBalance(origin, ram)){
             uint64_t originId = common::toUUID(origin);
@@ -123,32 +132,39 @@ public:
             .active = activeauth
         };
 
-        name newAccountContract = common::getNewAccountContract();
-
-        // stake (not transfer) tokens for CPU and Net
-        // TODO: make this staked amount also come from the balances of the contributors
         bool transfer = false;
 
-        action(
-            permission_level{ createbridge, "active"_n },
-            newAccountContract,
-            name("newaccount"),
-            new_account
-        ).send();
+        name newAccountContract = common::getNewAccountContract();
+        name newAccountAction = common::getNewAccountAction();
+        if(true) { // check if the account creation is fixed
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                newAccountAction,
+                new_account
+            ).send();
+        } else {
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("newaccount"),
+                new_account
+            ).send();
 
-        action(
-            permission_level{ createbridge, "active"_n },
-            newAccountContract,
-            name("buyram"),
-            make_tuple(createbridge, account, ram)
-        ).send();
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("buyram"),
+                make_tuple(createbridge, account, ram)
+            ).send();
 
-        action(
-            permission_level{ createbridge, "active"_n },
-            newAccountContract,
-            name("delegatebw"),
-            make_tuple(createbridge, account, net, cpu, transfer)
-        ).send();
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("delegatebw"),
+                make_tuple(createbridge, account, net, cpu, transfer)
+            ).send();
+        }
     };
 
 };
