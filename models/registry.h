@@ -21,7 +21,7 @@ namespace registry{
 
         uint64_t primary_key() const {return common::toUUID(dapp);}
 
-        EOSLIB_SERIALIZE(registryStruct, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(airdrop)(pricekey))
+        EOSLIB_SERIALIZE(registryStruct, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(pricekey)(airdrop))
     };
 
     typedef eosio::multi_index<"registry"_n, registryStruct> Registry;

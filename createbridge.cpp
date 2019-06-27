@@ -86,7 +86,7 @@ public:
      * Only the owner account/whitelisted account will be able to create new user account for the dapp
      */ 
 
-    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, airdropdata& airdrop, uint64_t pricekey = 0) {
+    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata& airdrop) {
         require_auth(dapp != "free" ? owner : _self);
 
         auto iterator = dapps.find(toUUID(dapp));

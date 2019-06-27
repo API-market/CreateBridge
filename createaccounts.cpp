@@ -41,12 +41,12 @@ public:
         uint64_t ram_bytes = iterator->ram_bytes;
         
         // cost of required ram
-        asset ram = common::getRamCost(ram_bytes);
+        asset ram = common::getRamCost(ram_bytes, iterator->pricekey);
         
         asset net;
         asset cpu;
 
-        if(ram_bytes) {
+        if(ram_bytes > 0) {
             net = iterator->net;
             cpu = iterator->cpu;
         } else {
@@ -83,7 +83,7 @@ public:
             }
         }
 
-        createAccount(account, ownerAuth, activeAuth, ram, net, cpu);
+        createAccount(account, ownerAuth, activeAuth, ram, net, cpu, iterator->pricekey);
 
         // subtract the used balance 
         if(ramFromPayer.amount > 0)
@@ -124,7 +124,7 @@ public:
     /***
      * Calls the chain to create a new account
      */ 
-    void createAccount(name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu){
+    void createAccount(name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu, uint64_t pricekey){
         accounts::newaccount new_account = accounts::newaccount{
             .creator = createbridge,
             .name = account,
@@ -132,7 +132,19 @@ public:
             .active = activeauth
         };
 
+        // accounts::newtieraccount new_tier_account = accounts::newtieraccount{
+        //     .creator = createbridge,
+        //     .newname = account,
+        //     .ownerkey = ownerauth,
+        //     .activekey = activeauth,
+        //     .pricekey = price_key
+        // };
+
         bool transfer = false;
+
+        print("price key");
+        print(std::to_string(pricekey));
+        print(account);
 
         name newAccountContract = common::getNewAccountContract();
         name newAccountAction = common::getNewAccountAction();
@@ -141,7 +153,7 @@ public:
                 permission_level{ createbridge, "active"_n },
                 newAccountContract,
                 newAccountAction,
-                new_account
+                make_tuple(createbridge, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey)
             ).send();
         } else {
             action(

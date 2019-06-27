@@ -130,9 +130,9 @@ namespace common {
      * Returns the price of ram for given bytes
      */
 
-    asset getRamCost(uint64_t ram_bytes, uint64_t priceKey = 0){
+    asset getRamCost(uint64_t ram_bytes, uint64_t priceKey){
        asset ramcost;
-       if(ram_bytes){
+       if(ram_bytes > 0){
             RamInfo ramInfo(name("eosio"), name("eosio").value);
             auto ramData = ramInfo.find(S_RAM.raw());
             symbol coreSymbol = getCoreSymbol();
@@ -149,8 +149,12 @@ namespace common {
             name newaccountcontract = getNewAccountContract();
             priceTable price(newaccountcontract, newaccountcontract.value);
             auto priceItr = price.find(priceKey);
-            ramcost = priceItr->createprice - (priceItr->netamount + priceItr->cpuamount);
+            ramcost.amount = priceItr->createprice.amount - (priceItr->netamount.amount + priceItr->cpuamount.amount);
+            ramcost.symbol = priceItr->createprice.symbol;
        }
+       print("Ramcost incoming");
+       print(std::to_string(ramcost.amount));
+       print(ramcost.symbol.raw());
        return ramcost;  
     }
 
