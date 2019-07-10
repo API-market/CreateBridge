@@ -1,0 +1,309 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Tue May 28 11:34:45 2019",
+    "version": "eosio::abi/1.1",
+    "structs": [
+        {
+            "name": "airdropdata",
+            "base": "",
+            "fields": [
+                {
+                    "name": "contract",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens",
+                    "type": "asset"
+                },
+                {
+                    "name": "limit",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "balances",
+            "base": "",
+            "fields": [
+                {
+                    "name": "memo",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contributors",
+                    "type": "contributors[]"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "clean",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "contributors",
+            "base": "",
+            "fields": [
+                {
+                    "name": "contributor",
+                    "type": "name"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                },
+                {
+                    "name": "ram",
+                    "type": "int32"
+                },
+                {
+                    "name": "totalaccounts",
+                    "type": "int32"
+                },
+                {
+                    "name": "createdaccounts",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "create",
+            "base": "",
+            "fields": [
+                {
+                    "name": "memo",
+                    "type": "string"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "ownerkey",
+                    "type": "public_key"
+                },
+                {
+                    "name": "activekey",
+                    "type": "public_key"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "define",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "dapp",
+                    "type": "string"
+                },
+                {
+                    "name": "ram_bytes",
+                    "type": "uint64"
+                },
+                {
+                    "name": "net",
+                    "type": "asset"
+                },
+                {
+                    "name": "cpu",
+                    "type": "asset"
+                },
+                {
+                    "name": "airdrop",
+                    "type": "airdropdata"
+                }
+            ]
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": [
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "newaccountcontract",
+                    "type": "name"
+                },
+                {
+                    "name": "minimumram",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "reclaim",
+            "base": "",
+            "fields": [
+                {
+                    "name": "reclaimer",
+                    "type": "name"
+                },
+                {
+                    "name": "dapp",
+                    "type": "string"
+                },
+                {
+                    "name": "sym",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "registry",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "dapp",
+                    "type": "string"
+                },
+                {
+                    "name": "ram_bytes",
+                    "type": "uint64"
+                },
+                {
+                    "name": "net",
+                    "type": "asset"
+                },
+                {
+                    "name": "cpu",
+                    "type": "asset"
+                },
+                {
+                    "name": "custodians",
+                    "type": "name[]"
+                },
+                {
+                    "name": "airdrop",
+                    "type": "airdropdata?"
+                }
+            ]
+        },
+        {
+            "name": "token",
+            "base": "",
+            "fields": [
+                {
+                    "name": "S_SYS",
+                    "type": "symbol"
+                },
+                {
+                    "name": "newaccountcontract",
+                    "type": "name"
+                },
+                {
+                    "name": "min_ram",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "whitelist",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "dapp",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "clean",
+            "type": "clean",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "create",
+            "type": "create",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "define",
+            "type": "define",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "reclaim",
+            "type": "reclaim",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "whitelist",
+            "type": "whitelist",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "balances",
+            "type": "balances",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "contributors",
+            "type": "contributors",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "registry",
+            "type": "registry",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "token",
+            "type": "token",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "abi_extensions": []
+}
