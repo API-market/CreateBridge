@@ -117,7 +117,6 @@ namespace common {
         uint64_t rambytes;            // initial amount of ram
         asset netamount;              // initial amount of net
         asset cpuamount;              // initial amount of cpu
-        uint64_t bwpricerate;         // ORE to SYS ratio for system resource delegations
 
         uint64_t primary_key() const { return key; }
     };
@@ -143,18 +142,14 @@ namespace common {
             print(std::to_string(base));
             uint64_t quote = ramData->quote.balance.amount;
             ramcost = asset((((double)quote / base))*ram_bytes, coreSymbol);
-       } else {
+       } else { //if account is tier fixed
             Token token(createbridgeName, createbridgeName.value);
-            auto itr = token.find(S_RAM.raw());
             name newaccountcontract = getNewAccountContract();
             priceTable price(newaccountcontract, newaccountcontract.value);
             auto priceItr = price.find(priceKey);
             ramcost.amount = priceItr->createprice.amount - (priceItr->netamount.amount + priceItr->cpuamount.amount);
             ramcost.symbol = priceItr->createprice.symbol;
        }
-       print("Ramcost incoming");
-       print(std::to_string(ramcost.amount));
-       print(ramcost.symbol.raw());
        return ramcost;  
     }
 

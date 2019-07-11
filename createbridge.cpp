@@ -147,7 +147,7 @@ public:
      * 1. Choose a contributor, if any, for the dapp to fund the cost for new account creation
      * 2. Check if the contributor is funding 100 %. If not, check if the "memo" account has enough to fund the remaining cost of account creation
     */
-    ACTION create(string& memo, name& account, public_key& ownerkey, public_key& activekey, string& origin){
+    ACTION create(string& memo, name& account, public_key& ownerkey, public_key& activekey, string& origin, name referral){
         auto iterator = dapps.find(toUUID(origin));
 
         // Only owner/whitelisted account for the dapp can create accounts
@@ -164,8 +164,7 @@ public:
 
         authority owner{ .threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {} };
         authority active{ .threshold = 1, .keys = {key_weight{activekey, 1}}, .accounts = {}, .waits = {} };
-
-        createJointAccount(memo, account, origin, owner, active);
+        createJointAccount(memo, account, origin, owner, active, referral);
     }
 
     /***

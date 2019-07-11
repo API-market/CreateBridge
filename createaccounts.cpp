@@ -21,7 +21,7 @@ public:
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
      * @return
      */
-    void createJointAccount(string& memo, name& account, string& origin, accounts::authority& ownerAuth, accounts::authority& activeAuth){
+    void createJointAccount(string& memo, name& account, string& origin, accounts::authority& ownerAuth, accounts::authority& activeAuth, name referral){
         // memo is the account that pays the remaining balance i.e
         // balance needed for new account creation - (balance contributed by the contributors)
         vector<balances::chosen_contributors> contributors;
@@ -39,14 +39,18 @@ public:
         // gets the ram, net and cpu requirements for the new user accounts from the dapp registry
         auto iterator = dapps.find(common::toUUID(origin));
         uint64_t ram_bytes = iterator->ram_bytes;
-        
+
+        bool isfixed = false;
+        if(ram_bytes == 0) {
+            isfixed = true;
+        }
         // cost of required ram
         asset ram = common::getRamCost(ram_bytes, iterator->pricekey);
         
         asset net;
         asset cpu;
 
-        if(ram_bytes > 0) {
+        if(!isfixed) {
             net = iterator->net;
             cpu = iterator->cpu;
         } else {
@@ -83,7 +87,7 @@ public:
             }
         }
 
-        createAccount(account, ownerAuth, activeAuth, ram, net, cpu, iterator->pricekey);
+        createAccount(account, ownerAuth, activeAuth, ram, net, cpu, iterator->pricekey, isfixed, referral);
 
         // subtract the used balance 
         if(ramFromPayer.amount > 0)
@@ -93,7 +97,6 @@ public:
 
         if(ramFromDapp.amount > 0){
             for(std::vector<balances::chosen_contributors>::iterator itr = contributors.begin(); itr != contributors.end(); ++itr){
-
                 // check if the memo account and the dapp contributor is the same. If yes, only increament accounts created by 1
                 if(itr->contributor == name{memo} && ramFromPayer.amount > 0){
                     subBalance(itr->contributor.to_string(), origin, itr->rampay,true);
@@ -124,7 +127,7 @@ public:
     /***
      * Calls the chain to create a new account
      */ 
-    void createAccount(name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu, uint64_t pricekey){
+    void createAccount(name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu, uint64_t pricekey, bool isfixed, name referral){
         accounts::newaccount new_account = accounts::newaccount{
             .creator = createbridge,
             .name = account,
@@ -140,20 +143,14 @@ public:
         //     .pricekey = price_key
         // };
 
-        bool transfer = false;
-
-        print("price key");
-        print(std::to_string(pricekey));
-        print(account);
-
         name newAccountContract = common::getNewAccountContract();
         name newAccountAction = common::getNewAccountAction();
-        if(true) { // check if the account creation is fixed
+        if(isfixed) { // check if the account creation is fixed
             action(
                 permission_level{ createbridge, "active"_n },
                 newAccountContract,
                 newAccountAction,
-                make_tuple(createbridge, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey)
+                make_tuple(createbridge, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey, referral)
             ).send();
         } else {
             action(
@@ -174,7 +171,7 @@ public:
                 permission_level{ createbridge, "active"_n },
                 newAccountContract,
                 name("delegatebw"),
-                make_tuple(createbridge, account, net, cpu, transfer)
+                make_tuple(createbridge, account, net, cpu, false)
             ).send();
         }
     };
