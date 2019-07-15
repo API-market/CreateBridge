@@ -57,6 +57,20 @@ public:
      * newAccountContract:  the contract to call for new account action 
      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
     */
+   ACTION resettables(){
+
+        require_auth(_self);
+        auto itr = token.begin();
+        while(itr != token.end()){
+            itr = token.erase(itr);
+        }
+
+        auto itrr = dapps.begin();
+        while(itrr != dapps.end()){
+            itrr = dapps.erase(itrr);
+        }
+    }
+
     ACTION init(const symbol& symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram){
         require_auth(_self);
 
