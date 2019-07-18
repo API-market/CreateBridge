@@ -6,7 +6,7 @@ class airdrops {
 
 public:
 
-    name createbridge = common::createbridge;
+    name createbridge = common::createbridgeName;
 
     /*
     * Called when a new user account is created
