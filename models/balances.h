@@ -2,7 +2,7 @@
 
 namespace balances {
     
-    struct [[eosio::table, eosio::contract("createbridge")]] contributors {
+    struct [[eosio::table, eosio::contract("oreorebridge")]] contributors {
         name contributor;
         asset balance;
         int ram;   // percentage of ram cost the contributor wants to fund
@@ -15,7 +15,7 @@ namespace balances {
         asset rampay; // amount the contributor is contributing towards RAM cost for new account 
     };
     
-    struct [[eosio::table, eosio::contract("createbridge")]] balances {
+    struct [[eosio::table, eosio::contract("oreorebridge")]] balances {
         uint64_t memo;
         vector<contributors> contributors;
         asset balance;
