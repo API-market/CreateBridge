@@ -8,7 +8,7 @@ namespace registry{
         asset       limit;
     };
 
-    struct [[eosio::table, eosio::contract("oreorebridge")]] registry {
+    struct [[eosio::table, eosio::contract("oreorebridge")]] registryStruct {
         name owner;
         string dapp;
         uint64_t ram_bytes;           
@@ -20,9 +20,9 @@ namespace registry{
 
         uint64_t primary_key() const {return common::toUUID(dapp);}
 
-        EOSLIB_SERIALIZE(registry, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(airdrop))
+        EOSLIB_SERIALIZE(registryStruct, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(airdrop))
     };
 
-    typedef eosio::multi_index<"registry"_n, registry> Registry;
+    typedef eosio::multi_index<"registry"_n, registryStruct> Registry;
 }
 

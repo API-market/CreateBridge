@@ -9,7 +9,7 @@ using std::vector;
 
 namespace common {
     static const symbol S_RAM = symbol("RAMCORE", 4);
-    static const name createbridge = name("oreorebridge");
+    static const name createbridgeName = name("oreorebridge");
     inline static uint64_t toUUID(string username){
         return std::hash<string>{}(username);
     }
@@ -63,7 +63,7 @@ namespace common {
      * @return
      */
     symbol getCoreSymbol(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->S_SYS;
     }
 
@@ -71,7 +71,7 @@ namespace common {
      * Returns the contract name for new account action
      */
     name getNewAccountContract(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->newaccountcontract;
     }
 
@@ -79,7 +79,7 @@ namespace common {
      * Returns the minimum bytes of RAM for new account creation
      */
     uint64_t getMinimumRAM(){
-        Token token(createbridge, createbridge.value);
+        Token token(createbridgeName, createbridgeName.value);
         return token.begin()->min_ram;
     }
 

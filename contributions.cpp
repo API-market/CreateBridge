@@ -17,7 +17,7 @@ class contributions {
 
 public:
 
-    name createbridge = common::createbridge;
+    name createbridge = common::createbridgeName;
 
     /*
      * Returns the total balance contributed for a dapp

@@ -15,7 +15,7 @@ using namespace std;
 class createaccounts : public contributions, public airdrops{
 
 public:
-    name createbridge = common::createbridge;
+    name createbridge = common::createbridgeName;
 
     /***
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
