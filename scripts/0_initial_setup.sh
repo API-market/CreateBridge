@@ -8,10 +8,10 @@ source ~/.bash_aliases
 # - 1. PKEY: The public key used for the accounts, defaults to eosio test key
 
 PKEY=${1:-EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV}
-STANDARD_TOKEN_CONTRACT_DIR=${2:-"$HOME/eosio.contracts"}
+STANDARD_TOKEN_CONTRACT_DIR=${2:-"$HOME/code/eosio.contracts"}
 
 # Creating required testing accounts
-cleos create account eosio createbridge "$PKEY" "$PKEY"
+cleos create account eosio oreorebridge "$PKEY" "$PKEY"
 cleos create account eosio appcustodian "$PKEY" "$PKEY"
 cleos create account eosio contributor1 "$PKEY" "$PKEY"
 

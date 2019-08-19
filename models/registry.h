@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../lib/common.h"
 namespace registry{
 
     struct airdropdata {

@@ -18,5 +18,6 @@ NEWACCOUNT_ACTION=${4:-createoreacc}
 MINIMUM_RAM=${5:-4096}
 
 # specify the chain symbol and the contract name to call for new account action 
-cleos push action createbridge init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$NEWACCOUNT_ACTION'","'$MINIMUM_RAM'"]' -p createbridge
+cleos push action createbridge init '["'$SYMBOL_PRECISION','$CHAIN_SYMBOL'","'$NEWACCOUNT_CONTRACT'","'$NEWACCOUNT_ACTION'","'$MINIMUM_RAM'"]' -p oreorebridge
+
 

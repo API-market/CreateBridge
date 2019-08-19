@@ -5,22 +5,22 @@ source ~/.bash_aliases
 
 echo "-------------------"
 echo "Balances"
-cleos get table createbridge createbridge balances
+cleos get table oreorebridge oreorebridge balances
 echo ""
 echo ""
 
 echo "Contributors"
-cleos get table createbridge createbridge contributors
+cleos get table oreorebridge oreorebridge contributors
 echo ""
 echo ""
 
 echo "Registry"
-cleos get table createbridge createbridge registry
+cleos get table oreorebridge oreorebridge registry
 echo ""
 echo ""
 
 echo "Token"
-cleos get table createbridge createbridge token
+cleos get table oreorebridge oreorebridge token
 echo ""
 echo ""
 echo "-------------------"

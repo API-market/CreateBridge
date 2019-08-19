@@ -1,5 +1,4 @@
 #pragma once
-
 namespace balances {
     
     struct [[eosio::table, eosio::contract("oreorebridge")]] contributors {

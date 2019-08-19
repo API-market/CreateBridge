@@ -9,9 +9,11 @@ source ~/.bash_aliases
 # - 2. OUTPUT_DIR: The output directory for the ABI and WASM files
 # - 3. CONTRACT_ACCOUNT: The name of the contract account to set the contract to
 
-CONTRACT_NAME=${1:-createbridge}
-OUTPUT_DIR=${2:-../build}
-CONTRACT_ACCOUNT=${3:-createbridge}
+
+CONTRACT_NAME=${1:-oreorebridge}
+OUTPUT_DIR=${2:-~/Createbridge}
+CONTRACT_ACCOUNT=${3:-oreorebridge}
+
 
 echo ${CONTRACT_NAME}
 echo ${OUTPUT_DIR}
