@@ -10,7 +10,7 @@
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
-    
+
 using namespace eosio;
 using namespace std;
 class contributions {
@@ -37,6 +37,35 @@ public:
         return balanceFor(memo).amount > quantity.amount;
     }
 
+    // TODO: move the following 2 functions to a common library. Replicated in createaccounts
+
+    /***
+     * Checks if an account is whitelisted for a dapp by the owner of the dapp
+     * @return
+     */
+    bool checkIfWhitelisted(name account, string dapp){
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto iterator = dapps.find(common::toUUID(dapp));
+        auto position_in_whitelist = std::find(iterator->custodians.begin(), iterator->custodians.end(), account);
+        if(position_in_whitelist != iterator->custodians.end()){
+            return true;
+        }
+        return false;
+    }
+
+    bool checkIfOwner(name account, string dapp){
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto iterator = dapps.find(common::toUUID(dapp));
+
+        if(iterator != dapps.end())
+        {
+            if(account == iterator->owner){
+                return true;
+            }
+        }
+        return false;      
+    }
+
     /*
      * Adds the amount contributed by the contributor for an app to the balances table
      * Called by the internal transfer function 
@@ -45,15 +74,32 @@ public:
 
         vector<string> stats = common::split(memo, ",");
         uint64_t id = common::toUUID(stats[0]);
+        symbol core_symbol = common::getCoreSymbol();
 
         int ram = stats[0] == "free" ? 100 : stoi(stats[1]);
-        int totalaccounts = stats.size() == 3 ? stoi(stats[2]) : -1;
+        int totalaccounts = stats.size() > 2 ? stoi(stats[2]) : -1;
+
+        asset net_balance = asset(0'0000, core_symbol);
+        asset cpu_balance = asset(0'0000, core_symbol);
+
+        // only owner or the whitelisted account are allowed to contribute for cpu and net
+        // TODO: accomodate the case for "free"
+        if(checkIfOwner(from, stats[0]) || checkIfWhitelisted(from, stats[0])){
+            // cpu or net balance are passed in as 1000000 in memo for a value like 100.0000 SYS
+            int64_t net_quantity = stats.size() > 3 ? stoi(stats[3]) : 0'0000;
+            int64_t cpu_quantity = stats.size() > 4 ? stoi(stats[4]) : 0'0000;
+
+            net_balance = asset(net_quantity, core_symbol);
+            cpu_balance = asset(cpu_quantity, core_symbol);
+        }
+
+        asset ram_balance = quantity - (net_balance + cpu_balance);
 
         balances::Balances balances(createbridge, createbridge.value);
         auto iterator = balances.find(id);
         if(iterator == balances.end()) balances.emplace(createbridge, [&](auto& row){
             row.memo = id;
-            row.contributors.push_back({from, quantity, ram, totalaccounts, 0});
+            row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
             row.balance = quantity;
             row.origin = stats[0];
             row.timestamp = now();
@@ -65,14 +111,16 @@ public:
             };
             std::vector<balances::contributors>::iterator itr = std::find_if(std::begin(row.contributors), std::end(row.contributors), pred);    
             if(itr != std::end(row.contributors)){
-                itr->balance += quantity;
+                itr->balance += ram_balance;
+                itr->net_balance += net_balance;
+                itr->cpu_balance += cpu_balance;
                 itr->ram = ram;
                 itr->totalaccounts = totalaccounts;
             } else {
-                row.contributors.push_back({from, quantity, ram, totalaccounts, 0});
+                row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
                 row.timestamp = now();
             }
-            row.balance += quantity;
+            row.balance += ram_balance;
         });
     }
 
@@ -121,7 +169,7 @@ public:
      * Gets the balance of a contributor for a dapp
      * @return
      */
-    asset findContribution(string dapp, name contributor){
+    asset findContribution(string dapp, name contributor, string type){
         balances::Balances balances(createbridge, createbridge.value);
         uint64_t id = common::toUUID(dapp);
         auto iterator = balances.find(id);
@@ -137,7 +185,11 @@ public:
             };
             auto itr = std::find_if(std::begin(iterator->contributors), std::end(iterator->contributors), pred);  
             if(itr != std::end(iterator->contributors)){
-                return itr->balance;
+                switch(type){
+                    case ram: return itr->balance;
+                    case cpu: return itr->cpu_balance;
+                    case net: return itr->net_balance;
+                }
             } else{
                 print(msg.c_str());
                 return asset(0'0000, coreSymbol);
@@ -149,7 +201,7 @@ public:
     }
 
     /***
-     * Gets the RAM contribution of a contributor for a dapp
+     * Gets the % RAM contribution of a contributor for a dapp
      * @return
      */
     int findRamContribution(string dapp, name contributor){
