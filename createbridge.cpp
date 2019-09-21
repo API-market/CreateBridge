@@ -7,7 +7,7 @@
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
-
+#include "models/stakes.h"
 #include "createaccounts.cpp"
 
 using namespace eosio;
@@ -249,6 +249,28 @@ public:
         }
     }
 
+    ACTION unstakecpu(name& from, name& to, string& origin){
+        auto iterator = dapps.find(toUUID(origin));
+        // TODO: get cpu value from the user account instead of dapp registry
+        asset cpu = iterator->cpu;
+
+        symbol coreSymbol = common::getCoreSymbol();
+        asset net = asset(0'0000, coreSymbol);
+        
+        unstakeCpuOrNet(from, to, origin, net, cpu);
+    }
+
+    ACTION unstakenet(name& from, name& to, string& origin){
+        auto iterator = dapps.find(toUUID(origin));
+        // TODO: get net value from the user account instead of dapp registry
+        asset net = iterator->cpu;
+
+        symbol coreSymbol = common::getCoreSymbol();
+        asset cpu = asset(0'0000, coreSymbol);
+        
+        unstakeCpuOrNet(from, to, origin, net, cpu);
+    }
+
     /**********************************************/
     /***                                        ***/
     /***               Transfers                ***/
@@ -257,11 +279,15 @@ public:
 
     void transfer(const name& from, const name& to, const asset& quantity, string& memo){
         if(to != _self) return;
-        if(from == name("eosio.stake")) return;
+        if(from == name("eosio.stake")){
+            addUnstakeBalance(quantity);
+        };
+
         if(quantity.symbol != getCoreSymbol()) return;
         if(memo.length() > 64) return;
         addBalance(from, quantity, memo);
     }
+
 };
 
 extern "C" {
@@ -269,7 +295,7 @@ void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     auto self = receiver;
 
     if( code == self ) switch(action) {
-        EOSIO_DISPATCH_HELPER( createbridge, (init)(clean)(create)(define)(whitelist)(reclaim))
+        EOSIO_DISPATCH_HELPER( createbridge, (init)(clean)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet))
     }
 
     else {
