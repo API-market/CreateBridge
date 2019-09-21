@@ -138,8 +138,6 @@ namespace common {
             eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
 
             uint64_t base = ramData->base.balance.amount;
-            print("\nbase\n");
-            print(std::to_string(base));
             uint64_t quote = ramData->quote.balance.amount;
             ramcost = asset((((double)quote / base))*ram_bytes, coreSymbol);
        } else { //if account is tier fixed
