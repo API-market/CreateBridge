@@ -5,6 +5,7 @@
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
+#include "models/stakes.h"
 
 #include "contributions.cpp"
 #include "airdrops.cpp"
@@ -44,15 +45,24 @@ public:
         if(ram_bytes == 0) {
             isfixed = true;
         }
+
         // cost of required ram
         asset ram = common::getRamCost(ram_bytes, iterator->pricekey);
         
         asset net;
         asset cpu;
 
+        // isfixed - if a fixed tier pricing is offered for accounts. For ex - 5 SYS for 4096 bytes RAM, 1 SYS CPU and 1 SYS net
         if(!isfixed) {
             net = iterator->net;
             cpu = iterator->cpu;
+
+            asset cpu_balance = contributions::findContribution(origin, name(memo),'cpu');
+            asset net_balance = contributions::findContribution(origin, name(memo),'net');
+
+            if(!(cpu > cpu_balance && net > net_balance)){
+              eosio_assert(false, ("Not enough cpu or net balance in " + memo + "for " + origin + " to pay for account's bandwidth.").c_str());
+            }
         } else {
             net = common::getFixedNet(iterator->pricekey);
             cpu = common::getFixedCpu(iterator->pricekey);
@@ -79,8 +89,9 @@ public:
 
         // find the balance of the "memo" account for the origin and check if it has balance >= total balance for RAM, CPU and net - (balance payed by the contributors)
         if(ramFromPayer > asset(0'0000, coreSymbol)){
-            asset balance = contributions::findContribution(origin, name(memo));
-            requiredBalance = ramFromPayer + cpu + net;
+            asset balance = contributions::findContribution(origin, name(memo),'ram');
+            requiredBalance = ramFromPayer;
+
             // if the "memo" account doesn't have enough fund, check globally available "free" pool
             if(balance < requiredBalance){
                 eosio_assert(false, ("Not enough balance in " + memo + " or donated by the contributors for " + origin + " to pay for account creation.").c_str());
@@ -124,6 +135,22 @@ public:
         return false;
     }
 
+    void checkIfOwnerOrWhitelisted(name account, string origin){
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto iterator = dapps.find(common::toUUID(origin));
+
+        if(iterator != dapps.end())
+        {
+            if(account == iterator->owner)                      require_auth(account);
+            else if(checkIfWhitelisted(account, origin))        require_auth(account);
+            else if(origin == "free")                           print("using globally available free funds to create account");
+            else                                                eosio_assert(false, ("only owner or whitelisted accounts can call this action for " + origin).c_str());
+        }
+        else {
+            eosio_assert(false, ("no owner account found for " + origin).c_str());
+        }
+    }
+
     /***
      * Calls the chain to create a new account
      */ 
@@ -134,14 +161,6 @@ public:
             .owner = ownerauth,
             .active = activeauth
         };
-
-        // accounts::newtieraccount new_tier_account = accounts::newtieraccount{
-        //     .creator = createbridge,
-        //     .newname = account,
-        //     .ownerkey = ownerauth,
-        //     .activekey = activeauth,
-        //     .pricekey = price_key
-        // };
 
         name newAccountContract = common::getNewAccountContract();
         name newAccountAction = common::getNewAccountAction();
@@ -176,4 +195,38 @@ public:
         }
     };
 
+    // TODO: add the unstaked balance to the unstaked table 
+    // void addToReclaimTable(name& from, string origin, asset net, asset cpu){
+        
+    // }
+
+    void unstakeCpuOrNet(name& from, name& to, string origin, asset net, asset cpu){
+        checkIfOwnerOrWhitelisted(from, origin);
+        
+        name newAccountContract = common::getNewAccountContract();
+
+        action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("undelegatebw"),
+                make_tuple(createbridge, to, net, cpu)
+        ).send();
+
+        //TODO: finish this
+        //addToReclaimTable(from, origin, net, cpu);
+        
+    }
+
+    void addUnstakeBalance(asset quantity){
+        stakes::Totalunstake total_unstaked(createbridge, createbridge.value);
+        auto iterator = total_unstaked.find(quantity.symbol.raw());
+
+        if(iterator == total_unstaked.end()) total_unstaked.emplace(createbridge, [&](auto& row){
+            row.balance = quantity;
+        });
+        else total_unstaked.modify(iterator, same_payer, [&](auto& row){
+            row.balance += quantity;
+        });
+
+    }
 };
