@@ -30,12 +30,4 @@ namespace accounts {
         authority owner;
         authority active;
     };
-
-    // struct newtieraccount {
-    //     name creator;
-    //     name newname;
-    //     authority ownerkey;
-    //     authority activekey;
-    //     uint64_t pricekey;
-    // };
 }
