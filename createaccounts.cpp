@@ -50,19 +50,24 @@ public:
         asset ram = common::getRamCost(ram_bytes, iterator->pricekey);
         
         asset net;
+        asset net_balance;
         asset cpu;
+        asset cpu_balance;
 
         // isfixed - if a fixed tier pricing is offered for accounts. For ex - 5 SYS for 4096 bytes RAM, 1 SYS CPU and 1 SYS net
         if(!isfixed) {
             net = iterator->net;
             cpu = iterator->cpu;
 
-            asset cpu_balance = contributions::findContribution(origin, name(memo),'cpu');
-            asset net_balance = contributions::findContribution(origin, name(memo),'net');
+            net_balance = contributions::findContribution(origin, name(memo),"net");
+            cpu_balance = contributions::findContribution(origin, name(memo),"cpu");
 
-            if(!(cpu > cpu_balance && net > net_balance)){
+            if(cpu > cpu_balance || net > net_balance){
               eosio_assert(false, ("Not enough cpu or net balance in " + memo + "for " + origin + " to pay for account's bandwidth.").c_str());
             }
+
+            subCpuOrNetBalance(memo, origin, net, "net");
+            subCpuOrNetBalance(memo, origin, cpu, "cpu");
         } else {
             net = common::getFixedNet(iterator->pricekey);
             cpu = common::getFixedCpu(iterator->pricekey);
@@ -89,7 +94,7 @@ public:
 
         // find the balance of the "memo" account for the origin and check if it has balance >= total balance for RAM, CPU and net - (balance payed by the contributors)
         if(ramFromPayer > asset(0'0000, coreSymbol)){
-            asset balance = contributions::findContribution(origin, name(memo),'ram');
+            asset balance = contributions::findContribution(origin, name(memo),"ram");
             requiredBalance = ramFromPayer;
 
             // if the "memo" account doesn't have enough fund, check globally available "free" pool

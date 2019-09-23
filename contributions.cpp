@@ -100,7 +100,7 @@ public:
         if(iterator == balances.end()) balances.emplace(createbridge, [&](auto& row){
             row.memo = id;
             row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
-            row.balance = quantity;
+            row.balance = ram_balance;
             row.origin = stats[0];
             row.timestamp = now();
 
@@ -138,11 +138,7 @@ public:
         eosio_assert(iterator != balances.end(), "No balance object");
         eosio_assert(iterator->balance.amount >= quantity.amount, "overdrawn balance" );
 
-        if(iterator->balance.amount - quantity.amount <= 0){
-            balances.erase(iterator);
-        }
-
-        else balances.modify(iterator, same_payer, [&](auto& row){
+        balances.modify(iterator, same_payer, [&](auto& row){
             auto pred = [memo](const balances::contributors & item) {
                 return item.contributor == name(memo);
             };
@@ -153,8 +149,42 @@ public:
                 if(!memoIsDapp){
                     itr->createdaccounts += 1;
                 }
+
+                if(row.balance.amount <=0 && itr->cpu_balance.amount <= 0 && itr->net_balance.amount <= 0){
+                    row.contributors.erase(itr);
+                }
             } else {
                 eosio_assert(false, ("The account " + memo + "not found as one of the contributors for " + origin).c_str());
+            }
+        });
+    }
+
+    /* subtracts the balance used to stake/rex for cpu */
+    void subCpuOrNetBalance(string memo, string& origin, const asset& quantity, string type){
+        uint64_t id = common::toUUID(origin);
+
+        balances::Balances balances(createbridge, createbridge.value);
+        auto iterator = balances.find(id);
+
+        eosio_assert(iterator != balances.end(), "No balance object");
+
+        balances.modify(iterator, same_payer, [&](auto& row){
+            auto pred = [memo](const balances::contributors & item) {
+                return item.contributor == name(memo);
+            };
+            auto itr = std::find_if(std::begin(row.contributors), std::end(row.contributors), pred);    
+            if(itr != std::end(row.contributors)){
+                if(type == "net"){
+                    eosio_assert(itr->net_balance.amount >= quantity.amount, "overdrawn balance" );
+                    itr->net_balance -= quantity;
+                }
+
+                if(type == "cpu"){
+                    eosio_assert(itr->cpu_balance.amount >= quantity.amount, "overdrawn balance" );
+                    itr->cpu_balance -= quantity;
+                }
+            } else {
+                eosio_assert(false, ("The account " + memo + "not found as one of the " + type + " contributors for " + origin).c_str());
             }
         });
     }
@@ -185,10 +215,16 @@ public:
             };
             auto itr = std::find_if(std::begin(iterator->contributors), std::end(iterator->contributors), pred);  
             if(itr != std::end(iterator->contributors)){
-                switch(type){
-                    case ram: return itr->balance;
-                    case cpu: return itr->cpu_balance;
-                    case net: return itr->net_balance;
+                if(type == "ram"){
+                    return itr->balance;
+                }
+
+                if(type == "net"){
+                    return itr->net_balance;
+                } 
+                
+                if(type == "cpu"){
+                    return itr->cpu_balance;
                 }
             } else{
                 print(msg.c_str());
