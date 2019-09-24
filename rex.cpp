@@ -25,6 +25,10 @@ public:
                         make_tuple(createbridge, account, row.rex->net_loan_payment, row.rex->net_loan_fund))
                         .send();
                 }
+                else
+                {
+                    eosio_assert(row.use_rex, ("Rex not enabled for" + dapp).c_str());
+                }
             });
     }
 
@@ -44,17 +48,23 @@ public:
                         make_tuple(createbridge, account, row.rex->cpu_loan_payment, row.rex->cpu_loan_fund))
                         .send();
                 }
+                else
+                {
+                    eosio_assert(row.use_rex, ("Rex not enabled for" + dapp).c_str());
+                }
             });
     }
 
-    void fundloan(name account, asset quantity, string dapp, string type)
+    void fundloan(name from, name to, asset quantity, string dapp, string type)
     {
         registry::Registry dapps(createbridge, createbridge.value);
         auto iterator = dapps.find(common::toUUID(dapp));
 
+        eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
+
         if (type == "net")
         {
-            uint64_t loan_num = common::getNetLoanNumber(account);
+            uint64_t loan_num = common::getNetLoanNumber(to);
 
             action(
                 permission_level{createbridge, "active"_n},
@@ -66,7 +76,7 @@ public:
 
         if (type == "cpu")
         {
-            uint64_t loan_num = common::getCpuLoanNumber(account);
+            uint64_t loan_num = common::getCpuLoanNumber(to);
 
             action(
                 permission_level{createbridge, "active"_n},

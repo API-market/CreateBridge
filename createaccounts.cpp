@@ -14,7 +14,7 @@
 using namespace eosio;
 using namespace std;
 
-class createaccounts : public contributions, public airdrops, public rex
+class createaccounts : public airdrops, public contributions, public rex
 {
 
 public:

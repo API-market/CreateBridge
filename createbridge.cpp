@@ -31,6 +31,8 @@ public:
                                                                           balances(_self, _self.value),
                                                                           token(_self, _self.value) {}
 
+    name createbridgename = common::createbridgeName;
+
     template <typename T>
     void cleanTable()
     {
@@ -295,7 +297,7 @@ public:
 
     /**********************************************/
     /***                                        ***/
-    /***               STAKE/REX                ***/
+    /***               STAKE                    ***/
     /***                                        ***/
     /**********************************************/
 
@@ -323,21 +325,56 @@ public:
         unstakeCpuOrNet(from, to, origin, net, cpu);
     }
 
-    ACTION fundnetloan(name & account, asset quantity, string & origin)
+    /**********************************************/
+    /***                                        ***/
+    /***               REX                    ***/
+    /***                                        ***/
+    /**********************************************/
+
+    // finds the existing net loan from createbridge to user account and funds it
+    ACTION fundnetloan(name & from, name & to, asset quantity, string & origin)
     {
-        fundloan(account, quantity, origin, "net");
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        fundloan(from, to, quantity, origin, "net");
+        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
     }
 
-    ACTION fundcpuloan(name & account, asset quantity, string & origin)
+    // finds the existing cpu loan from createbridge to user account and funds it
+    ACTION fundcpuloan(name & from, name & to, asset quantity, string & origin)
     {
-        fundloan(account, quantity, origin, "cpu");
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        fundloan(from, to, quantity, origin, "cpu");
+        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
     }
 
-    /*
-    topup rex loan balance to the provided balance in the action 
-    */
-    ACTION topup()
+    // creates a new loan from createbridge to the user acount (to)
+    ACTION rentnet(name & from, name & to, string & origin)
     {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        registry::Registry dapps(createbridgename, createbridgename.value);
+        auto iterator = dapps.find(common::toUUID(origin));
+
+        rex::rentnet(origin, to);
+
+        asset quantity = iterator->rex->net_loan_payment + iterator->rex->net_loan_fund;
+        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
+    }
+
+    // creates a new loan from createbridge to the user acount (to)
+    ACTION rentcpu(name & from, name & to, string & origin)
+    {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        registry::Registry dapps(createbridgename, createbridgename.value);
+        auto iterator = dapps.find(common::toUUID(origin));
+
+        rex::rentcpu(origin, to);
+
+        asset quantity = iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund;
+        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
     }
 
     /**********************************************/
@@ -352,7 +389,9 @@ public:
             return;
         if (from == name("eosio.stake"))
         {
-            addUnstakeBalance(quantity);
+            return;
+            // TODO: enable this when unstake functionality is completed
+            //addUnstakeBalance(quantity);
         };
 
         if (quantity.symbol != getCoreSymbol())
@@ -372,7 +411,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu))
             }
 
         else

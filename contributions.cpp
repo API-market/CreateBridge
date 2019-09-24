@@ -228,7 +228,7 @@ public:
             }
             else
             {
-                eosio_assert(false, ("The account " + memo + "not found as one of the " + type + " contributors for " + origin).c_str());
+                eosio_assert(false, ("The account " + memo + " not found as one of the " + type + " contributors for " + origin).c_str());
             }
         });
     }
