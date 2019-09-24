@@ -9,11 +9,12 @@
 
 #include "contributions.cpp"
 #include "airdrops.cpp"
+#include "rex.cpp"
 
 using namespace eosio;
 using namespace std;
 
-class createaccounts : public contributions, public airdrops{
+class createaccounts : public contributions, public airdrops, public rex {
 
 public:
     name createbridge = common::createbridgeName;
@@ -103,7 +104,7 @@ public:
             }
         }
 
-        createAccount(account, ownerAuth, activeAuth, ram, net, cpu, iterator->pricekey, isfixed, referral);
+        createAccount(origin, account, ownerAuth, activeAuth, ram, net, cpu, iterator->pricekey, iterator->use_rex, isfixed, referral);
 
         // subtract the used balance 
         if(ramFromPayer.amount > 0)
@@ -159,7 +160,7 @@ public:
     /***
      * Calls the chain to create a new account
      */ 
-    void createAccount(name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu, uint64_t pricekey, bool isfixed, name referral){
+    void createAccount(string dapp, name& account, accounts::authority& ownerauth, accounts::authority& activeauth, asset& ram, asset& net, asset& cpu, uint64_t pricekey, bool use_rex, bool isfixed, name referral){
         accounts::newaccount new_account = accounts::newaccount{
             .creator = createbridge,
             .name = account,
@@ -191,12 +192,18 @@ public:
                 make_tuple(createbridge, account, ram)
             ).send();
 
-            action(
-                permission_level{ createbridge, "active"_n },
-                newAccountContract,
-                name("delegatebw"),
-                make_tuple(createbridge, account, net, cpu, false)
-            ).send();
+            if(use_rex == true){
+                rentnet(dapp, account);
+                rentcpu(dapp, account);
+            } else {
+                action(
+                    permission_level{ createbridge, "active"_n },
+                    newAccountContract,
+                    name("delegatebw"),
+                    make_tuple(createbridge, account, net, cpu, false)
+                ).send();
+            }
+
         }
     };
 

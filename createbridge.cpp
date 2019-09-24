@@ -44,6 +44,10 @@ public:
         cleanTable<Balances>();
     }
 
+    ACTION cleanreg(){
+        require_auth(_self);
+        cleanTable<Registry>();
+    }
 
     /**********************************************/
     /***                                        ***/
@@ -87,7 +91,7 @@ public:
      * Only the owner account/whitelisted account will be able to create new user account for the dapp
      */ 
 
-    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata& airdrop) {
+    ACTION define(name& owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata& airdrop, bool use_rex, rexdata& rex) {
         require_auth(dapp != "free" ? owner : _self);
 
         auto iterator = dapps.find(toUUID(dapp));
@@ -108,6 +112,8 @@ public:
             row.net = net;
             row.cpu = cpu;
             row.airdrop = airdrop;
+            row.use_rex = use_rex;
+            row.rex = rex;
         });
 
         // Updating an existing dapp reference's configurations
@@ -117,6 +123,8 @@ public:
             row.net = net;
             row.cpu = cpu;
             row.airdrop = airdrop;
+            row.use_rex = use_rex;
+            row.rex = rex;
         });
     }
 
@@ -295,7 +303,7 @@ void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     auto self = receiver;
 
     if( code == self ) switch(action) {
-        EOSIO_DISPATCH_HELPER( createbridge, (init)(clean)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet))
+        EOSIO_DISPATCH_HELPER( createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet))
     }
 
     else {
