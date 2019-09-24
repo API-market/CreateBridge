@@ -372,7 +372,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan))
             }
 
         else
