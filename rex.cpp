@@ -40,4 +40,29 @@ public:
             }
         });   
     }
+
+    void fundloan(name account, asset quantity, string dapp, string type){
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto iterator = dapps.find(common::toUUID(dapp));
+
+        auto loan_num = common::getCpuLoanNumber(account);
+
+        if(type == "net"){
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("fundnetloan"),
+                make_tuple(createbridge, loan_num , quantity)
+            ).send();
+        }
+
+        if(type == "cpu"){
+            action(
+                permission_level{ createbridge, "active"_n },
+                newAccountContract,
+                name("fundcpuloan"),
+                make_tuple(createbridge, loan_num, quantity)
+            ).send();
+        }
+    }
 };
