@@ -57,9 +57,10 @@ public:
 
         // isfixed - if a fixed tier pricing is offered for accounts. For ex - 5 SYS for 4096 bytes RAM, 1 SYS CPU and 1 SYS net
         if(!isfixed) {
-            net = iterator->net;
-            cpu = iterator->cpu;
+            net = iterator->use_rex ? iterator->rex->net_loan_payment + iterator->rex->net_loan_fund : iterator->net;
+            cpu = iterator->use_rex ? iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund : iterator->cpu;
 
+            // if using rex, then the net balance to be deducted will be the same as net_loan_payment + net_loan_fund. Similar for cpu
             net_balance = contributions::findContribution(origin, name(memo),"net");
             cpu_balance = contributions::findContribution(origin, name(memo),"cpu");
 

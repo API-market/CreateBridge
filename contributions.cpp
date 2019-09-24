@@ -73,35 +73,53 @@ public:
     void addBalance(const name& from, const asset& quantity, string& memo){
 
         vector<string> stats = common::split(memo, ",");
-        uint64_t id = common::toUUID(stats[0]);
+        auto dapp = stats[0];
+        uint64_t id = common::toUUID(dapp);
         symbol core_symbol = common::getCoreSymbol();
 
-        int ram = stats[0] == "free" ? 100 : stoi(stats[1]);
+        int ram = dapp == "free" ? 100 : stoi(stats[1]);
         int totalaccounts = stats.size() > 2 ? stoi(stats[2]) : -1;
 
         asset net_balance = asset(0'0000, core_symbol);
         asset cpu_balance = asset(0'0000, core_symbol);
 
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto itr = dapps.find(common::toUUID(dapp));
+
+        balances::Balances balances(createbridge, createbridge.value);
+        auto iterator = balances.find(id);
+
+        name newAccountContract = common::getNewAccountContract();
+
         // only owner or the whitelisted account are allowed to contribute for cpu and net
         // TODO: accomodate the case for "free"
-        if(checkIfOwner(from, stats[0]) || checkIfWhitelisted(from, stats[0])){
+        if(checkIfOwner(from, dapp) || checkIfWhitelisted(from, dapp)){
             // cpu or net balance are passed in as 1000000 in memo for a value like 100.0000 SYS
             int64_t net_quantity = stats.size() > 3 ? stoi(stats[3]) : 0'0000;
             int64_t cpu_quantity = stats.size() > 4 ? stoi(stats[4]) : 0'0000;
 
             net_balance = asset(net_quantity, core_symbol);
             cpu_balance = asset(cpu_quantity, core_symbol);
+
+            // deposit rex funds for cpu and net
+            if(itr->use_rex == true){
+                auto rex_balance = net_balance + cpu_balance;
+                action(
+                    permission_level{ createbridge, "active"_n },
+                    newAccountContract,
+                    name("deposit"),
+                    make_tuple(createbridge, rex_balance)
+                ).send();
+            }
         }
 
         asset ram_balance = quantity - (net_balance + cpu_balance);
 
-        balances::Balances balances(createbridge, createbridge.value);
-        auto iterator = balances.find(id);
         if(iterator == balances.end()) balances.emplace(createbridge, [&](auto& row){
             row.memo = id;
             row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
             row.balance = ram_balance;
-            row.origin = stats[0];
+            row.origin = dapp;
             row.timestamp = now();
 
         });
