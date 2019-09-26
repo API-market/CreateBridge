@@ -100,8 +100,8 @@ public:
         name newAccountContract = common::getNewAccountContract();
 
         // only owner or the whitelisted account are allowed to contribute for cpu and net
-        // TODO: accomodate the case for "free"
-        if (checkIfOwner(from, dapp) || checkIfWhitelisted(from, dapp))
+        // for globally available free funds, anybody can contribute
+        if (checkIfOwner(from, dapp) || checkIfWhitelisted(from, dapp) || dapp == "free")
         {
             // cpu or net balance are passed in as 1000000 in memo for a value like 100.0000 SYS
             int64_t net_quantity = stats.size() > 3 ? stoi(stats[3]) : 0'0000;
