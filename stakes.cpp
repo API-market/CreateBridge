@@ -70,18 +70,22 @@ public:
         addToUnstakedTable(from, dapp, net, cpu);
     }
 
-    void addTotalUnstaked(asset quantity)
+    void addTotalUnstaked(const asset &quantity)
     {
         bandwidth::Totalreclaim total_unstaked(createbridge, createbridge.value);
         auto iterator = total_unstaked.find(quantity.symbol.raw());
 
         if (iterator == total_unstaked.end())
+        {
             total_unstaked.emplace(createbridge, [&](auto &row) {
                 row.balance = quantity;
             });
+        }
         else
+        {
             total_unstaked.modify(iterator, same_payer, [&](auto &row) {
                 row.balance += quantity;
             });
+        }
     }
 };

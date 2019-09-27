@@ -407,8 +407,7 @@ public:
             return;
         if (from == name("eosio.stake"))
         {
-            return;
-            // addTotalUnstaked(quantity);
+            return addTotalUnstaked(quantity);
         };
 
         if (quantity.symbol != getCoreSymbol())
