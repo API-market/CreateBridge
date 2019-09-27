@@ -212,19 +212,19 @@ typedef eosio::multi_index<"netloan"_n, rex_loan,
                            indexed_by<"byowner"_n, const_mem_fun<rex_loan, uint64_t, &rex_loan::by_owner>>>
     rex_net_loan_table;
 
-uint64_t getCpuLoanNumber(name account)
+auto getCpuLoanRecord(name account)
 {
     rex_cpu_loan_table cpu_loans(name("eosio"), name("eosio").value);
     auto cpu_idx = cpu_loans.get_index<"byowner"_n>();
     auto loans = cpu_idx.find(createbridgeName.value);
 
     auto i = cpu_idx.lower_bound(createbridgeName.value);
-    //i <= cpu_idx.upper_bound(createbridgeName.value)
+
     while (i != cpu_idx.end())
     {
         if (i->receiver == account)
         {
-            return i->loan_num;
+            return i;
         };
         i++;
     };
@@ -232,19 +232,19 @@ uint64_t getCpuLoanNumber(name account)
     eosio_assert(false, ("No existing loan found for" + account.to_string()).c_str());
 }
 
-uint64_t getNetLoanNumber(name account)
+auto getNetLoanRecord(name account)
 {
     rex_net_loan_table net_loans(name("eosio"), name("eosio").value);
     auto net_idx = net_loans.get_index<"byowner"_n>();
     auto loans = net_idx.find(createbridgeName.value);
 
     auto i = net_idx.lower_bound(createbridgeName.value);
-    //i <= cpu_idx.upper_bound(createbridgeName.value)
+
     while (i != net_idx.end())
     {
         if (i->receiver == account)
         {
-            return i->loan_num;
+            return i;
         };
         i++;
     };

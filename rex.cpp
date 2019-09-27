@@ -55,7 +55,7 @@ public:
             });
     }
 
-    void fundloan(name from, name to, asset quantity, string dapp, string type)
+    void fundloan(name to, asset quantity, string dapp, string type)
     {
         registry::Registry dapps(createbridge, createbridge.value);
         auto iterator = dapps.find(common::toUUID(dapp));
@@ -64,26 +64,86 @@ public:
 
         if (type == "net")
         {
-            uint64_t loan_num = common::getNetLoanNumber(to);
+            auto loan_record = common::getNetLoanRecord(to);
 
             action(
                 permission_level{createbridge, "active"_n},
                 newAccountContract,
                 name("fundnetloan"),
-                make_tuple(createbridge, loan_num, quantity))
+                make_tuple(createbridge, loan_record->loan_num, quantity))
                 .send();
         }
 
         if (type == "cpu")
         {
-            uint64_t loan_num = common::getCpuLoanNumber(to);
+            auto loan_record = common::getCpuLoanRecord(to);
 
             action(
                 permission_level{createbridge, "active"_n},
                 newAccountContract,
                 name("fundcpuloan"),
-                make_tuple(createbridge, loan_num, quantity))
+                make_tuple(createbridge, loan_record->loan_num, quantity))
                 .send();
         }
+    }
+
+    std::tuple<asset, asset> topup(name to, asset cpuquantity, asset netquantity, string dapp)
+    {
+        asset required_cpu_loan_bal;
+        asset required_net_loan_bal;
+
+        registry::Registry dapps(createbridge, createbridge.value);
+        auto iterator = dapps.find(common::toUUID(dapp));
+
+        eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
+
+        auto net_loan_record = common::getNetLoanRecord(to);
+        auto cpu_loan_record = common::getCpuLoanRecord(to);
+
+        if (net_loan_record->receiver == to)
+        {
+            asset existing_net_loan_bal = net_loan_record->balance;
+            required_net_loan_bal = netquantity - existing_net_loan_bal;
+
+            if (required_net_loan_bal > asset(0'0000, common::getCoreSymbol()))
+            {
+                action(
+                    permission_level{createbridge, "active"_n},
+                    newAccountContract,
+                    name("fundnetloan"),
+                    make_tuple(createbridge, net_loan_record->loan_num, required_net_loan_bal))
+                    .send();
+            }
+        }
+        else
+        {
+            // creates a new rex loan with the loan fund/balance provided in app registration
+            rentnet(dapp, to);
+        }
+
+        if (cpu_loan_record->receiver == to)
+        {
+            asset existing_cpu_loan_bal = cpu_loan_record->balance;
+            required_cpu_loan_bal = cpuquantity - existing_cpu_loan_bal;
+
+            if (required_cpu_loan_bal > asset(0'0000, common::getCoreSymbol()))
+            {
+                action(
+                    permission_level{createbridge, "active"_n},
+                    newAccountContract,
+                    name("fundcpuloan"),
+                    make_tuple(createbridge, cpu_loan_record->loan_num, required_cpu_loan_bal))
+                    .send();
+            }
+        }
+        else
+        {
+            // creates a new rex loan with the loan fund/balance provided in app registration
+            required_cpu_loan_bal = iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund;
+            required_net_loan_bal = iterator->rex->net_loan_payment + iterator->rex->net_loan_fund;
+            rentcpu(dapp, to);
+        }
+
+        return make_tuple(required_cpu_loan_bal, required_net_loan_bal);
     }
 };

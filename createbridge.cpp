@@ -336,7 +336,7 @@ public:
     {
         checkIfOwnerOrWhitelisted(from, origin);
 
-        fundloan(from, to, quantity, origin, "net");
+        fundloan(to, quantity, origin, "net");
         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
     }
 
@@ -345,7 +345,7 @@ public:
     {
         checkIfOwnerOrWhitelisted(from, origin);
 
-        fundloan(from, to, quantity, origin, "cpu");
+        fundloan(to, quantity, origin, "cpu");
         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
     }
 
@@ -375,6 +375,20 @@ public:
 
         asset quantity = iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund;
         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
+    }
+
+    // topup existing loan balance (cpu & net) for a user up to the given quantity
+    // If no existing loan, then create a new loan
+    ACTION topuploans(name & from, name & to, asset & cpuquantity, asset & netquantity, string & origin)
+    {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        asset required_net_bal, required_cpu_bal;
+        print(required_net_bal);
+        tie(required_net_bal, required_cpu_bal) = rex::topup(to, cpuquantity, netquantity, origin);
+
+        contributions::subCpuOrNetBalance(from.to_string(), origin, required_net_bal, "net");
+        contributions::subCpuOrNetBalance(from.to_string(), origin, required_cpu_bal, "cpu");
     }
 
     /**********************************************/
@@ -411,7 +425,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
