@@ -403,9 +403,7 @@ public:
             return;
         if (from == name("eosio.stake"))
         {
-            return;
-            // TODO: enable this when unstake functionality is completed
-            //addUnstakeBalance(quantity);
+            addTotalUnstaked(quantity);
         };
 
         if (quantity.symbol != getCoreSymbol())

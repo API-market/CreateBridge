@@ -72,7 +72,7 @@ public:
 
     void addTotalUnstaked(asset quantity)
     {
-        bandwidth::Totalunstake total_unstaked(createbridge, createbridge.value);
+        bandwidth::Totalunstaked total_unstaked(createbridge, createbridge.value);
         auto iterator = total_unstaked.find(quantity.symbol.raw());
 
         if (iterator == total_unstaked.end())
