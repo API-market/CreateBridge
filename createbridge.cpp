@@ -31,7 +31,7 @@ public:
     createbridge(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),
                                                                           dapps(_self, _self.value),
                                                                           balances(_self, _self.value),
-                                                                          token(_self, _self.value) {}
+                                                                          token(_self, _self.value){}
 
     name createbridgename = common::createbridgeName;
 
@@ -58,6 +58,12 @@ public:
         cleanTable<Registry>();
     }
 
+    ACTION cleantoken()
+    {
+        require_auth(_self);
+        cleanTable<Token>();
+    }
+
     /**********************************************/
     /***                                        ***/
     /***                Actions                 ***/
@@ -71,26 +77,22 @@ public:
      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
     */
 
-    ACTION init(const symbol &symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram)
-    {
+    ACTION init(const symbol& symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram){
         require_auth(_self);
 
         auto iterator = token.find(symbol.raw());
 
-        if (iterator == token.end())
-            token.emplace(_self, [&](auto &row) {
-                row.S_SYS = symbol;
-                row.newaccountcontract = newaccountcontract;
-                row.newaccountaction = newaccountaction;
-                row.min_ram = minimumram;
-            });
-        else
-            token.modify(iterator, same_payer, [&](auto &row) {
-                row.S_SYS = symbol;
-                row.newaccountcontract = newaccountcontract;
-                row.newaccountaction = newaccountaction;
-                row.min_ram = minimumram;
-            });
+        if(iterator == token.end())token.emplace(_self, [&](auto& row){
+            row.S_SYS = symbol;
+            row.newaccountcontract = newaccountcontract;
+            row.newaccountaction = newaccountaction;
+            row.min_ram = minimumram;
+        }); else token.modify(iterator, same_payer, [&](auto& row){
+            row.S_SYS = symbol;
+            row.newaccountcontract = newaccountcontract;
+            row.newaccountaction = newaccountaction;
+            row.min_ram = minimumram;
+        });    
     }
 
     /***
@@ -355,7 +357,6 @@ public:
     {
         checkIfOwnerOrWhitelisted(from, origin);
 
-        registry::Registry dapps(createbridgename, createbridgename.value);
         auto iterator = dapps.find(common::toUUID(origin));
 
         rex::rentnet(origin, to);
@@ -369,7 +370,6 @@ public:
     {
         checkIfOwnerOrWhitelisted(from, origin);
 
-        registry::Registry dapps(createbridgename, createbridgename.value);
         auto iterator = dapps.find(common::toUUID(origin));
 
         rex::rentcpu(origin, to);
@@ -403,7 +403,8 @@ public:
             return;
         if (from == name("eosio.stake"))
         {
-            addTotalUnstaked(quantity);
+            return;
+           // addTotalUnstaked(quantity);
         };
 
         if (quantity.symbol != getCoreSymbol())
@@ -423,7 +424,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
