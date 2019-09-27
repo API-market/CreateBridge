@@ -5,16 +5,17 @@
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
-#include "models/stakes.h"
+#include "models/bandwidth.h"
 
-#include "contributions.cpp"
 #include "airdrops.cpp"
+#include "contributions.cpp"
 #include "rex.cpp"
+#include "stakes.cpp"
 
 using namespace eosio;
 using namespace std;
 
-class createaccounts : public airdrops, public contributions, public rex
+class createaccounts : public airdrops, public contributions, public rex, public stakes
 {
 
 public:
@@ -237,41 +238,4 @@ public:
             }
         }
     };
-
-    // TODO: add the unstaked balance to the unstaked table
-    // void addToReclaimTable(name& from, string origin, asset net, asset cpu){
-
-    // }
-
-    void unstakeCpuOrNet(name &from, name &to, string origin, asset net, asset cpu)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
-
-        name newAccountContract = common::getNewAccountContract();
-
-        action(
-            permission_level{createbridge, "active"_n},
-            newAccountContract,
-            name("undelegatebw"),
-            make_tuple(createbridge, to, net, cpu))
-            .send();
-
-        //TODO: finish this
-        //addToReclaimTable(from, origin, net, cpu);
-    }
-
-    void addUnstakeBalance(asset quantity)
-    {
-        stakes::Totalunstake total_unstaked(createbridge, createbridge.value);
-        auto iterator = total_unstaked.find(quantity.symbol.raw());
-
-        if (iterator == total_unstaked.end())
-            total_unstaked.emplace(createbridge, [&](auto &row) {
-                row.balance = quantity;
-            });
-        else
-            total_unstaked.modify(iterator, same_payer, [&](auto &row) {
-                row.balance += quantity;
-            });
-    }
 };

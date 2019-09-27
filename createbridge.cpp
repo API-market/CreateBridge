@@ -7,14 +7,16 @@
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
-#include "models/stakes.h"
+#include "models/bandwidth.h"
+
 #include "createaccounts.cpp"
 
 using namespace eosio;
 using namespace common;
 using namespace accounts;
-using namespace registry;
 using namespace balances;
+using namespace bandwidth;
+using namespace registry;
 using namespace std;
 
 CONTRACT createbridge : contract, public createaccounts
@@ -301,28 +303,27 @@ public:
     /***                                        ***/
     /**********************************************/
 
-    ACTION unstakecpu(name & from, name & to, string & origin)
+    ACTION unstake(name & from, name & to, string & origin)
     {
-        auto iterator = dapps.find(toUUID(origin));
-        // TODO: get cpu value from the user account instead of dapp registry
-        asset cpu = iterator->cpu;
+        checkIfOwnerOrWhitelisted(from, origin);
 
-        symbol coreSymbol = common::getCoreSymbol();
-        asset net = asset(0'0000, coreSymbol);
-
-        unstakeCpuOrNet(from, to, origin, net, cpu);
+        stakes::unstakeCpuOrNet(from, to, origin);
     }
 
     ACTION unstakenet(name & from, name & to, string & origin)
     {
-        auto iterator = dapps.find(toUUID(origin));
-        // TODO: get net value from the user account instead of dapp registry
-        asset net = iterator->cpu;
+        checkIfOwnerOrWhitelisted(from, origin);
 
-        symbol coreSymbol = common::getCoreSymbol();
-        asset cpu = asset(0'0000, coreSymbol);
+        // only unstake for net
+        stakes::unstakeCpuOrNet(from, to, origin, true, false);
+    }
 
-        unstakeCpuOrNet(from, to, origin, net, cpu);
+    ACTION unstakecpu(name & from, name & to, string & origin)
+    {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        // only unstake for cpu
+        stakes::unstakeCpuOrNet(from, to, origin, false, true);
     }
 
     /**********************************************/
@@ -384,7 +385,6 @@ public:
         checkIfOwnerOrWhitelisted(from, origin);
 
         asset required_net_bal, required_cpu_bal;
-        print(required_net_bal);
         tie(required_net_bal, required_cpu_bal) = rex::topup(to, cpuquantity, netquantity, origin);
 
         contributions::subCpuOrNetBalance(from.to_string(), origin, required_net_bal, "net");
@@ -425,7 +425,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstakecpu)(unstakenet)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(create)(define)(whitelist)(reclaim)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
