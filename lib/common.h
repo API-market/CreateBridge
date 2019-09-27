@@ -252,4 +252,4 @@ auto getNetLoanRecord(name account)
     eosio_assert(false, ("No existing loan found for" + account.to_string()).c_str());
 }
 
-};
+}; // namespace common
