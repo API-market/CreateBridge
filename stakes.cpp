@@ -8,14 +8,14 @@ public:
 
     void addToUnstakedTable(name from, string dapp, asset net, asset cpu)
     {
-        bandwidth::Unstaked unstakes(createbridge, from.value);
+        bandwidth::Unstaked total_unstaked(createbridge, from.value);
 
         auto origin = common::toUUID(dapp);
-        auto itr = unstakes.find(origin);
+        auto itr = total_unstaked.find(origin);
 
-        if (itr == unstakes.end())
+        if (itr == total_unstaked.end())
         {
-            itr = unstakes.emplace(from, [&](auto &row) {
+            itr = total_unstaked.emplace(from, [&](auto &row) {
                 row.reclaimer = from;
                 row.net_balance = net;
                 row.cpu_balance = cpu;
@@ -25,7 +25,7 @@ public:
         }
         else
         {
-            unstakes.modify(itr, same_payer, [&](auto &row) {
+            total_unstaked.modify(itr, same_payer, [&](auto &row) {
                 row.net_balance += net;
                 row.cpu_balance += cpu;
             });
@@ -72,20 +72,66 @@ public:
 
     void addTotalUnstaked(const asset &quantity)
     {
-        bandwidth::Totalreclaim total_unstaked(createbridge, createbridge.value);
-        auto iterator = total_unstaked.find(quantity.symbol.raw());
+        bandwidth::Totalreclaim total_reclaim(createbridge, createbridge.value);
+        auto iterator = total_reclaim.find(quantity.symbol.raw());
 
-        if (iterator == total_unstaked.end())
+        if (iterator == total_reclaim.end())
         {
-            total_unstaked.emplace(createbridge, [&](auto &row) {
+            total_reclaim.emplace(createbridge, [&](auto &row) {
                 row.balance = quantity;
             });
         }
         else
         {
-            total_unstaked.modify(iterator, same_payer, [&](auto &row) {
+            total_reclaim.modify(iterator, same_payer, [&](auto &row) {
                 row.balance += quantity;
             });
         }
+    }
+
+    void reclaimbwbalances(name from, string dapp)
+    {
+        bandwidth::Totalreclaim total_reclaim(createbridge, createbridge.value);
+
+        symbol coreSymbol = common::getCoreSymbol();
+        auto iterator = total_reclaim.find(coreSymbol.raw());
+        print(iterator->balance);
+        bandwidth::Unstaked total_unstaked(createbridge, from.value);
+        auto origin = common::toUUID(dapp);
+        auto itr = total_unstaked.find(origin);
+
+        // if (iterator == total_reclaim.end())
+        // {
+        //     eosio_assert(false, "Unstaking is still in progress. No balance available to be reclaimed");
+        // }
+
+        // if (itr == total_unstaked.end())
+        // {
+        //     auto msg = ("No balance left to reclaim for " + dapp + " by " + from.to_string()).c_str();
+        //     eosio_assert(false, msg);
+        // }
+        // else
+        // {
+
+        //     asset reclaimed_quantity = itr->net_balance + itr->cpu_balance;
+        //     print(reclaimed_quantity);
+
+        //     action(
+        //         permission_level{createbridge, "active"_n},
+        //         name("eosio.token"),
+        //         name("transfer"),
+        //         make_tuple(createbridge, from, reclaimed_quantity, "unstake balance reclaimed"))
+        //         .send();
+
+        // total_unstaked.erase(itr);
+
+        // total_reclaim.modify(iterator, same_payer, [&](auto &row) {
+        //     row.balance -= reclaimed_quantity;
+        //     if (row.balance.amount <= 0)
+        //     {
+        //         total_reclaim.erase(iterator);
+        //     }
+        // });
+        //}
     }
 };

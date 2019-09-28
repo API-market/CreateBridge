@@ -208,6 +208,12 @@ public:
         createJointAccount(memo, account, origin, owner, active, referral);
     }
 
+    /**********************************************/
+    /***                                        ***/
+    /***               RECLAIMS                 ***/
+    /***                                        ***/
+    /**********************************************/
+
     /***
      * Transfers the remaining balance of a contributor from createbridge back to the contributor
      * reclaimer: account trying to reclaim the balance
@@ -301,6 +307,14 @@ public:
                     }
                 });
         }
+    }
+
+    // reclaim the balance returned to createbridge for the app after the user's net/cpu resources are unstaked
+    ACTION reclaimbwbal(name & from, string & origin)
+    {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        stakes::reclaimbwbalances(from, origin);
     }
 
     /**********************************************/
@@ -427,7 +441,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(reclaimbwbal)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
