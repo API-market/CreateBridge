@@ -100,38 +100,38 @@ public:
         auto origin = common::toUUID(dapp);
         auto itr = total_unstaked.find(origin);
 
-        // if (iterator == total_reclaim.end())
-        // {
-        //     eosio_assert(false, "Unstaking is still in progress. No balance available to be reclaimed");
-        // }
+        if (iterator == total_reclaim.end())
+        {
+            eosio_assert(false, "Unstaking is still in progress. No balance available to be reclaimed");
+        }
 
-        // if (itr == total_unstaked.end())
-        // {
-        //     auto msg = ("No balance left to reclaim for " + dapp + " by " + from.to_string()).c_str();
-        //     eosio_assert(false, msg);
-        // }
-        // else
-        // {
+        if (itr == total_unstaked.end())
+        {
+            auto msg = ("No balance left to reclaim for " + dapp + " by " + from.to_string()).c_str();
+            eosio_assert(false, msg);
+        }
+        else
+        {
 
-        //     asset reclaimed_quantity = itr->net_balance + itr->cpu_balance;
-        //     print(reclaimed_quantity);
+            asset reclaimed_quantity = itr->net_balance + itr->cpu_balance;
+            print(reclaimed_quantity);
 
-        //     action(
-        //         permission_level{createbridge, "active"_n},
-        //         name("eosio.token"),
-        //         name("transfer"),
-        //         make_tuple(createbridge, from, reclaimed_quantity, "unstake balance reclaimed"))
-        //         .send();
+            //     action(
+            //         permission_level{createbridge, "active"_n},
+            //         name("eosio.token"),
+            //         name("transfer"),
+            //         make_tuple(createbridge, from, reclaimed_quantity, "unstake balance reclaimed"))
+            //         .send();
 
-        // total_unstaked.erase(itr);
+            // total_unstaked.erase(itr);
 
-        // total_reclaim.modify(iterator, same_payer, [&](auto &row) {
-        //     row.balance -= reclaimed_quantity;
-        //     if (row.balance.amount <= 0)
-        //     {
-        //         total_reclaim.erase(iterator);
-        //     }
-        // });
-        //}
+            // total_reclaim.modify(iterator, same_payer, [&](auto &row) {
+            //     row.balance -= reclaimed_quantity;
+            //     if (row.balance.amount <= 0)
+            //     {
+            //         total_reclaim.erase(iterator);
+            //     }
+            // });
+        }
     }
 };

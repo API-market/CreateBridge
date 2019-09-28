@@ -310,7 +310,7 @@ public:
     }
 
     // reclaim the balance returned to createbridge for the app after the user's net/cpu resources are unstaked
-    ACTION reclaimbwbal(name & from, string & origin)
+    ACTION refundstakes(name & from, string & origin)
     {
         checkIfOwnerOrWhitelisted(from, origin);
 
@@ -441,7 +441,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(reclaimbwbal)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
