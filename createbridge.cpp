@@ -246,7 +246,17 @@ public:
                     if (reclaimer_record != row.contributors.end())
                     {
                         reclaimer_balance = reclaimer_record->balance;
-                        row.contributors.erase(reclaimer_record, row.contributors.end());
+
+                        // only erase the contributor row if the cpu and net balances are also 0
+                        if (reclaimer_record->net_balance == asset(0'0000, getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, getCoreSymbol()))
+                        {
+                            row.contributors.erase(reclaimer_record, row.contributors.end());
+                        }
+                        else
+                        {
+                            reclaimer_record->balance -= reclaimer_balance;
+                        }
+
                         row.balance -= reclaimer_balance;
                     }
                     else
