@@ -11,7 +11,7 @@ using std::vector;
 namespace common
 {
 static const symbol S_RAM = symbol("RAMCORE", 4);
-static const name createbridgeName = name("createbridge");
+static const name createbridgeName = name("oreorebridge");
 
 inline static uint64_t toUUID(string username)
 {
@@ -57,7 +57,7 @@ uint64_t generate_random(uint64_t seed, uint64_t val)
 /***                                        ***/
 /**********************************************/
 
-struct [[ eosio::table, eosio::contract("createbridge") ]] token
+struct [[ eosio::table, eosio::contract("oreorebridge") ]] token
 {
     symbol S_SYS;
     name newaccountcontract;

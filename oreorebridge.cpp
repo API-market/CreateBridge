@@ -19,7 +19,7 @@ using namespace bandwidth;
 using namespace registry;
 using namespace std;
 
-CONTRACT createbridge : contract, public createaccounts
+CONTRACT oreorebridge : contract, public createaccounts
 {
 private:
     Registry dapps;
@@ -28,7 +28,7 @@ private:
 
 public:
     using contract::contract;
-    createbridge(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),
+    oreorebridge(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),
                                                                           dapps(_self, _self.value),
                                                                           balances(_self, _self.value),
                                                                           token(_self, _self.value) {}
@@ -451,14 +451,14 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(createbridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(oreorebridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else
         {
             if (code == name("eosio.token").value && action == name("transfer").value)
             {
-                execute_action(name(receiver), name(code), &createbridge::transfer);
+                execute_action(name(receiver), name(code), &oreorebridge::transfer);
             }
         }
     }
