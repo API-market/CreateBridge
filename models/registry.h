@@ -1,29 +1,41 @@
 #pragma once
 
-namespace registry{
+namespace registry
+{
 
-    struct airdropdata {
-        name        contract;
-        asset       tokens;
-        asset       limit;
-    };
+struct airdropdata
+{
+    name contract;
+    asset tokens;
+    asset limit;
+};
 
-    struct [[eosio::table, eosio::contract("createbridge")]] registryStruct {
-        name owner;
-        string dapp;
-        uint64_t ram_bytes;           
-        asset net;           
-        asset cpu;
-        vector<name> custodians;
-        uint64_t pricekey;
+struct rexdata
+{
+    asset net_loan_payment;
+    asset net_loan_fund;
+    asset cpu_loan_payment;
+    asset cpu_loan_fund;
+};
 
-        std::optional<airdropdata> airdrop;
+struct [[ eosio::table, eosio::contract("createbridge") ]] registryStruct
+{
+    name owner;
+    string dapp;
+    uint64_t ram_bytes;
+    asset net;
+    asset cpu;
+    vector<name> custodians;
+    uint64_t pricekey;
+    bool use_rex;
 
-        uint64_t primary_key() const {return common::toUUID(dapp);}
+    std::optional<airdropdata> airdrop;
+    std::optional<rexdata> rex;
 
-        EOSLIB_SERIALIZE(registryStruct, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(pricekey)(airdrop))
-    };
+    uint64_t primary_key() const { return common::toUUID(dapp); }
 
-    typedef eosio::multi_index<"registry"_n, registryStruct> Registry;
-}
+    EOSLIB_SERIALIZE(registryStruct, (owner)(dapp)(ram_bytes)(net)(cpu)(custodians)(pricekey)(use_rex)(airdrop)(rex))
+};
 
+typedef eosio::multi_index<"registry"_n, registryStruct> Registry;
+} // namespace registry
