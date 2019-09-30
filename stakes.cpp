@@ -95,7 +95,7 @@ public:
 
         symbol coreSymbol = common::getCoreSymbol();
         auto iterator = total_reclaim.find(coreSymbol.raw());
-        print(iterator->balance);
+
         bandwidth::Unstaked total_unstaked(createbridge, from.value);
         auto origin = common::toUUID(dapp);
         auto itr = total_unstaked.find(origin);
@@ -112,26 +112,26 @@ public:
         }
         else
         {
-
             asset reclaimed_quantity = itr->net_balance + itr->cpu_balance;
-            print(reclaimed_quantity);
 
-            //     action(
-            //         permission_level{createbridge, "active"_n},
-            //         name("eosio.token"),
-            //         name("transfer"),
-            //         make_tuple(createbridge, from, reclaimed_quantity, "unstake balance reclaimed"))
-            //         .send();
+            auto memo = "reimburse the unstaked balance to " + from.to_string();
 
-            // total_unstaked.erase(itr);
+            action(
+                permission_level{createbridge, "active"_n},
+                name("eosio.token"),
+                name("transfer"),
+                make_tuple(createbridge, from, reclaimed_quantity, memo))
+                .send();
 
-            // total_reclaim.modify(iterator, same_payer, [&](auto &row) {
-            //     row.balance -= reclaimed_quantity;
-            //     if (row.balance.amount <= 0)
-            //     {
-            //         total_reclaim.erase(iterator);
-            //     }
-            // });
+            total_unstaked.erase(itr);
+
+            total_reclaim.modify(iterator, same_payer, [&](auto &row) {
+                row.balance -= reclaimed_quantity;
+                if (row.balance.amount <= 0)
+                {
+                    total_reclaim.erase(iterator);
+                }
+            });
         }
     }
 };
