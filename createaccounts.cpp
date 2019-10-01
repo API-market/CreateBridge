@@ -35,6 +35,9 @@ public:
         asset balance;
         asset requiredBalance;
 
+        bool useOwnerCpuBalance = false;
+        bool useOwnerNetBalance = false;
+
         symbol coreSymbol = common::getCoreSymbol();
         asset ramFromDapp = asset(0'0000, coreSymbol);
 
@@ -67,15 +70,41 @@ public:
 
             // if using rex, then the net balance to be deducted will be the same as net_loan_payment + net_loan_fund. Similar for cpu
             net_balance = contributions::findContribution(origin, name(memo), "net");
+            if (net_balance == asset(0'0000, coreSymbol))
+            {
+                net_balance = contributions::findContribution(origin, iterator->owner, "net");
+                useOwnerNetBalance = true;
+            }
+
             cpu_balance = contributions::findContribution(origin, name(memo), "cpu");
+            if (cpu_balance == asset(0'0000, coreSymbol))
+            {
+                cpu_balance = contributions::findContribution(origin, iterator->owner, "cpu");
+                useOwnerCpuBalance = true;
+            }
 
             if (cpu > cpu_balance || net > net_balance)
             {
                 eosio_assert(false, ("Not enough cpu or net balance in " + memo + "for " + origin + " to pay for account's bandwidth.").c_str());
             }
 
-            subCpuOrNetBalance(memo, origin, net, "net");
-            subCpuOrNetBalance(memo, origin, cpu, "cpu");
+            if (useOwnerNetBalance)
+            {
+                subCpuOrNetBalance(owner, origin, net, "net");
+            }
+            else
+            {
+                subCpuOrNetBalance(memo, origin, net, "net");
+            }
+
+            if (useOwnerCpuBalance)
+            {
+                subCpuOrNetBalance(owner, origin, cpu, "cpu");
+            }
+            else
+            {
+                subCpuOrNetBalance(memo, origin, cpu, "cpu");
+            }
         }
         else
         {
