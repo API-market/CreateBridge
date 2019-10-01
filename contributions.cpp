@@ -251,7 +251,7 @@ public:
 
         symbol coreSymbol = common::getCoreSymbol();
 
-        auto msg = "No contribution found for " + dapp + " by " + contributor.to_string() + ".";
+        auto msg = "No contribution found for " + type + "for " + dapp + " by " + contributor.to_string() + ".";
 
         // if no record found for the dapp in the balances table, return the balance for the contributor as 0
         if (iterator != balances.end())
