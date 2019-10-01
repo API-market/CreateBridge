@@ -46,6 +46,7 @@ public:
 
         // gets the ram, net and cpu requirements for the new user accounts from the dapp registry
         auto iterator = dapps.find(common::toUUID(origin));
+        string owner = iterator->owner.to_string();
         uint64_t ram_bytes = iterator->ram_bytes;
 
         bool isfixed = false;
