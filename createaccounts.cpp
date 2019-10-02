@@ -142,6 +142,8 @@ public:
             requiredBalance = ramFromPayer;
 
             // if the "memo" account doesn't have enough fund, check globally available "free" pool
+            print(balance);
+            print(requiredBalance);
             if (balance < requiredBalance)
             {
                 eosio_assert(false, ("Not enough balance in " + memo + " or donated by the contributors for " + origin + " to pay for account creation.").c_str());
