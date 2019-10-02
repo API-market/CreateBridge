@@ -333,6 +333,15 @@ public:
     /***                                        ***/
     /**********************************************/
 
+    ACTION stake(name & from, name & to, string & origin, asset & net, asset & cpu)
+    {
+        checkIfOwnerOrWhitelisted(from, origin);
+
+        stakes::stakeCpuOrNet(to, net, cpu);
+        contributions::subCpuOrNetBalance(from.to_string(), origin, net, "net");
+        contributions::subCpuOrNetBalance(from.to_string(), origin, cpu, "cpu");
+    }
+
     ACTION unstake(name & from, name & to, string & origin)
     {
         checkIfOwnerOrWhitelisted(from, origin);
@@ -451,7 +460,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(oreorebridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(oreorebridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(stake)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
             }
 
         else

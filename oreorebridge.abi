@@ -371,6 +371,32 @@
             ]
         },
         {
+            "name": "stake",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                },
+                {
+                    "name": "net",
+                    "type": "asset"
+                },
+                {
+                    "name": "cpu",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "token",
             "base": "",
             "fields": [
@@ -586,6 +612,11 @@
         {
             "name": "rentnet",
             "type": "rentnet",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "stake",
+            "type": "stake",
             "ricardian_contract": ""
         },
         {
