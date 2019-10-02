@@ -4,7 +4,18 @@
 class stakes
 {
 public:
+    name newAccountContract = common::getNewAccountContract();
     name createbridge = common::createbridgeName;
+
+    void stakeCpuOrNet(name to, asset &net, asset &cpu)
+    {
+        action(
+            permission_level{createbridge, "active"_n},
+            newAccountContract,
+            name("delegatebw"),
+            make_tuple(createbridge, to, net, cpu, false))
+            .send();
+    }
 
     void addToUnstakedTable(name from, string dapp, asset net, asset cpu)
     {
@@ -37,8 +48,6 @@ public:
         asset zero_quantity = asset(0'0000, common::getCoreSymbol());
         asset net = zero_quantity;
         asset cpu = zero_quantity;
-
-        name newAccountContract = common::getNewAccountContract();
 
         bandwidth::del_bandwidth_table del_tbl(name("eosio"), createbridge.value);
 
