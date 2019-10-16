@@ -100,6 +100,8 @@ public:
 
     void reclaimbwbalances(name from, string dapp)
     {
+        asset zero_quantity = asset(0'0000, common::getCoreSymbol());
+
         bandwidth::Totalreclaim total_reclaim(createbridge, createbridge.value);
 
         symbol coreSymbol = common::getCoreSymbol();
@@ -132,14 +134,13 @@ public:
                 make_tuple(createbridge, from, reclaimed_quantity, memo))
                 .send();
 
-            total_unstaked.erase(itr);
+            total_unstaked.modify(itr, same_payer, [&](auto &row) {
+                row.net_balance = zero_quantity;
+                row.cpu_balance = zero_quantity;
+            });
 
             total_reclaim.modify(iterator, same_payer, [&](auto &row) {
                 row.balance -= reclaimed_quantity;
-                if (row.balance.amount <= 0)
-                {
-                    total_reclaim.erase(iterator);
-                }
             });
         }
     }
