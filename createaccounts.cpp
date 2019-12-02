@@ -259,7 +259,7 @@ public:
             }
             else
             {
-                if(net + cpu > (0'0000,coreSymbol)){
+                if(net + cpu > asset(0'0000,coreSymbol)){
                     action(
                         permission_level{createbridge, "active"_n},
                         newAccountContract,
