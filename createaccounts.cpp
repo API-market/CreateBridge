@@ -20,6 +20,7 @@ class createaccounts : public airdrops, public contributions, public rex, public
 
 public:
     name createbridge = common::createbridgeName;
+    symbol coreSymbol = common::getCoreSymbol();
 
     /***
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
@@ -38,7 +39,6 @@ public:
         bool useOwnerCpuBalance = false;
         bool useOwnerNetBalance = false;
 
-        symbol coreSymbol = common::getCoreSymbol();
         asset ramFromDapp = asset(0'0000, coreSymbol);
 
         balances::Balances balances(createbridge, createbridge.value);
@@ -259,12 +259,14 @@ public:
             }
             else
             {
-                action(
-                    permission_level{createbridge, "active"_n},
-                    newAccountContract,
-                    name("delegatebw"),
-                    make_tuple(createbridge, account, net, cpu, false))
-                    .send();
+                if(net + cpu > (0'0000,coreSymbol)){
+                    action(
+                        permission_level{createbridge, "active"_n},
+                        newAccountContract,
+                        name("delegatebw"),
+                        make_tuple(createbridge, account, net, cpu, false))
+                        .send();
+                }
             }
         }
     };
