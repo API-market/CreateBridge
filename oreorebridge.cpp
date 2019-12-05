@@ -430,7 +430,7 @@ public:
 
     // to check if createbridge is deployed and functioning
     ACTION ping(name & from){
-        print('ping');
+        print("ping");
     }
 
     /**********************************************/
