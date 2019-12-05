@@ -428,6 +428,11 @@ public:
         contributions::subCpuOrNetBalance(from.to_string(), origin, required_cpu_bal, "cpu");
     }
 
+    // to check if createbridge is deployed and functioning
+    ACTION ping(name & from){
+        print('ping');
+    }
+
     /**********************************************/
     /***                                        ***/
     /***               Transfers                ***/
@@ -460,7 +465,7 @@ extern "C"
         if (code == self)
             switch (action)
             {
-                EOSIO_DISPATCH_HELPER(oreorebridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(stake)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans))
+                EOSIO_DISPATCH_HELPER(oreorebridge, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(stake)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans)(ping))
             }
 
         else
