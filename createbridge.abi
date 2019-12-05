@@ -235,6 +235,16 @@
             ]
         },
         {
+            "name": "ping",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "reclaim",
             "base": "",
             "fields": [
@@ -592,6 +602,11 @@
         {
             "name": "init",
             "type": "init",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "ping",
+            "type": "ping",
             "ricardian_contract": ""
         },
         {
