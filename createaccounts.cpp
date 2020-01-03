@@ -19,7 +19,7 @@ class createaccounts : public airdrops, public contributions, public rex, public
 {
 
 public:
-    name createbridge = common::createbridgeName;
+    name createescrow = common::createescrowContractName;
     symbol coreSymbol = common::getCoreSymbol();
 
     /***
@@ -41,8 +41,8 @@ public:
 
         asset ramFromDapp = asset(0'0000, coreSymbol);
 
-        balances::Balances balances(createbridge, createbridge.value);
-        registry::Registry dapps(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
+        registry::Registry dapps(createescrow, createescrow.value);
 
         // gets the ram, net and cpu requirements for the new user accounts from the dapp registry
         auto iterator = dapps.find(common::toUUID(origin));
@@ -182,7 +182,7 @@ public:
      */
     bool checkIfWhitelisted(name account, string dapp)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
         auto position_in_whitelist = std::find(iterator->custodians.begin(), iterator->custodians.end(), account);
         if (position_in_whitelist != iterator->custodians.end())
@@ -194,7 +194,7 @@ public:
 
     void checkIfOwnerOrWhitelisted(name account, string origin)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(origin));
 
         if (iterator != dapps.end())
@@ -220,7 +220,7 @@ public:
     void createAccount(string dapp, name &account, accounts::authority &ownerauth, accounts::authority &activeauth, asset &ram, asset &net, asset &cpu, uint64_t pricekey, bool use_rex, bool isfixed, name referral)
     {
         accounts::newaccount new_account = accounts::newaccount{
-            .creator = createbridge,
+            .creator = createescrow,
             .name = account,
             .owner = ownerauth,
             .active = activeauth};
@@ -230,26 +230,26 @@ public:
         if (isfixed)
         { // check if the account creation is fixed
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 newAccountAction,
-                make_tuple(createbridge, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey, referral))
+                make_tuple(createescrow, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey, referral))
                 .send();
         }
         else
         {
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 name("newaccount"),
                 new_account)
                 .send();
 
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 name("buyram"),
-                make_tuple(createbridge, account, ram))
+                make_tuple(createescrow, account, ram))
                 .send();
 
             if (use_rex == true)
@@ -261,10 +261,10 @@ public:
             {
                 if(net + cpu > asset(0'0000,coreSymbol)){
                     action(
-                        permission_level{createbridge, "active"_n},
+                        permission_level{createescrow, "active"_n},
                         newAccountContract,
                         name("delegatebw"),
-                        make_tuple(createbridge, account, net, cpu, false))
+                        make_tuple(createescrow, account, net, cpu, false))
                         .send();
                 }
             }

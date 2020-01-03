@@ -16,7 +16,7 @@ struct delegated_bandwidth
 
 typedef eosio::multi_index<"delband"_n, delegated_bandwidth> del_bandwidth_table;
 
-struct [[ eosio::table, eosio::contract("createbridge") ]] unstakedBalStruct
+struct [[ eosio::table, eosio::contract("createescrow") ]] unstakedBalStruct
 {
     asset balance;
 
@@ -25,7 +25,7 @@ struct [[ eosio::table, eosio::contract("createbridge") ]] unstakedBalStruct
 
 typedef eosio::multi_index<"totalreclaim"_n, unstakedBalStruct> Totalreclaim;
 
-struct [[ eosio::table, eosio::contract("createbridge") ]] unstakeStruct
+struct [[ eosio::table, eosio::contract("createescrow") ]] unstakeStruct
 {
     name reclaimer;
     asset net_balance;

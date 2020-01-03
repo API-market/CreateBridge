@@ -11,7 +11,7 @@ using std::vector;
 namespace common
 {
 static const symbol S_RAM = symbol("RAMCORE", 4);
-static const name createbridgeName = name("createbridge");
+static const name createescrowContractName = name("createescrow");
 
 inline static uint64_t toUUID(string username)
 {
@@ -57,7 +57,7 @@ uint64_t generate_random(uint64_t seed, uint64_t val)
 /***                                        ***/
 /**********************************************/
 
-struct [[ eosio::table, eosio::contract("createbridge") ]] token
+struct [[ eosio::table, eosio::contract("createescrow") ]] token
 {
     symbol S_SYS;
     name newaccountcontract;
@@ -74,7 +74,7 @@ typedef eosio::multi_index<"token"_n, token> Token;
      */
 symbol getCoreSymbol()
 {
-    Token token(createbridgeName, createbridgeName.value);
+    Token token(createescrowContractName, createescrowContractName.value);
     return token.begin()->S_SYS;
 }
 
@@ -83,13 +83,13 @@ symbol getCoreSymbol()
      */
 name getNewAccountContract()
 {
-    Token token(createbridgeName, createbridgeName.value);
+    Token token(createescrowContractName, createescrowContractName.value);
     return token.begin()->newaccountcontract;
 }
 
 name getNewAccountAction()
 {
-    Token token(createbridgeName, createbridgeName.value);
+    Token token(createescrowContractName, createescrowContractName.value);
     return token.begin()->newaccountaction;
 }
 
@@ -98,7 +98,7 @@ name getNewAccountAction()
      */
 uint64_t getMinimumRAM()
 {
-    Token token(createbridgeName, createbridgeName.value);
+    Token token(createescrowContractName, createescrowContractName.value);
     return token.begin()->min_ram;
 }
 
@@ -159,7 +159,7 @@ asset getRamCost(uint64_t ram_bytes, uint64_t priceKey)
     }
     else
     { //if account is tier fixed
-        Token token(createbridgeName, createbridgeName.value);
+        Token token(createescrowContractName, createescrowContractName.value);
         name newaccountcontract = getNewAccountContract();
         priceTable price(newaccountcontract, newaccountcontract.value);
         auto priceItr = price.find(priceKey);
@@ -216,9 +216,9 @@ auto getCpuLoanRecord(name account)
 {
     rex_cpu_loan_table cpu_loans(name("eosio"), name("eosio").value);
     auto cpu_idx = cpu_loans.get_index<"byowner"_n>();
-    auto loans = cpu_idx.find(createbridgeName.value);
+    auto loans = cpu_idx.find(createescrowContractName.value);
 
-    auto i = cpu_idx.lower_bound(createbridgeName.value);
+    auto i = cpu_idx.lower_bound(createescrowContractName.value);
 
     while (i != cpu_idx.end())
     {
@@ -236,9 +236,9 @@ auto getNetLoanRecord(name account)
 {
     rex_net_loan_table net_loans(name("eosio"), name("eosio").value);
     auto net_idx = net_loans.get_index<"byowner"_n>();
-    auto loans = net_idx.find(createbridgeName.value);
+    auto loans = net_idx.find(createescrowContractName.value);
 
-    auto i = net_idx.lower_bound(createbridgeName.value);
+    auto i = net_idx.lower_bound(createescrowContractName.value);
 
     while (i != net_idx.end())
     {

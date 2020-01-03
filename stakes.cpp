@@ -5,21 +5,21 @@ class stakes
 {
 public:
     name newAccountContract = common::getNewAccountContract();
-    name createbridge = common::createbridgeName;
+    name createescrow = common::createescrowContractName;
 
     void stakeCpuOrNet(name to, asset &net, asset &cpu)
     {
         action(
-            permission_level{createbridge, "active"_n},
+            permission_level{createescrow, "active"_n},
             newAccountContract,
             name("delegatebw"),
-            make_tuple(createbridge, to, net, cpu, false))
+            make_tuple(createescrow, to, net, cpu, false))
             .send();
     }
 
     void addToUnstakedTable(name from, string dapp, asset net, asset cpu)
     {
-        bandwidth::Unstaked total_unstaked(createbridge, from.value);
+        bandwidth::Unstaked total_unstaked(createescrow, from.value);
 
         auto origin = common::toUUID(dapp);
         auto itr = total_unstaked.find(origin);
@@ -49,7 +49,7 @@ public:
         asset net = zero_quantity;
         asset cpu = zero_quantity;
 
-        bandwidth::del_bandwidth_table del_tbl(name("eosio"), createbridge.value);
+        bandwidth::del_bandwidth_table del_tbl(name("eosio"), createescrow.value);
 
         auto itr = del_tbl.find(to.value);
         if (itr != del_tbl.end())
@@ -69,10 +69,10 @@ public:
         if (net + cpu > zero_quantity)
         {
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 name("undelegatebw"),
-                make_tuple(createbridge, to, net, cpu))
+                make_tuple(createescrow, to, net, cpu))
                 .send();
         }
 
@@ -81,12 +81,12 @@ public:
 
     void addTotalUnstaked(const asset &quantity)
     {
-        bandwidth::Totalreclaim total_reclaim(createbridge, createbridge.value);
+        bandwidth::Totalreclaim total_reclaim(createescrow, createescrow.value);
         auto iterator = total_reclaim.find(quantity.symbol.raw());
 
         if (iterator == total_reclaim.end())
         {
-            total_reclaim.emplace(createbridge, [&](auto &row) {
+            total_reclaim.emplace(createescrow, [&](auto &row) {
                 row.balance = quantity;
             });
         }
@@ -100,12 +100,12 @@ public:
 
     void reclaimbwbalances(name from, string dapp)
     {
-        bandwidth::Totalreclaim total_reclaim(createbridge, createbridge.value);
+        bandwidth::Totalreclaim total_reclaim(createescrow, createescrow.value);
 
         symbol coreSymbol = common::getCoreSymbol();
         auto iterator = total_reclaim.find(coreSymbol.raw());
 
-        bandwidth::Unstaked total_unstaked(createbridge, from.value);
+        bandwidth::Unstaked total_unstaked(createescrow, from.value);
         auto origin = common::toUUID(dapp);
         auto itr = total_unstaked.find(origin);
 
@@ -126,10 +126,10 @@ public:
             auto memo = "reimburse the unstaked balance to " + from.to_string();
 
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 name("eosio.token"),
                 name("transfer"),
-                make_tuple(createbridge, from, reclaimed_quantity, memo))
+                make_tuple(createescrow, from, reclaimed_quantity, memo))
                 .send();
 
             total_unstaked.erase(itr);

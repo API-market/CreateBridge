@@ -5,13 +5,13 @@ class rex
 {
 
 public:
-    name createbridge = common::createbridgeName;
+    name createescrow = common::createescrowContractName;
     name newAccountContract = common::getNewAccountContract();
     name newAccountAction = common::getNewAccountAction();
 
     void rentnet(string dapp, name account)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
         if (iterator != dapps.end())
             dapps.modify(iterator, same_payer, [&](auto &row) {
@@ -19,10 +19,10 @@ public:
                 if (row.use_rex == true)
                 {
                     action(
-                        permission_level{createbridge, "active"_n},
+                        permission_level{createescrow, "active"_n},
                         newAccountContract,
                         name("rentnet"),
-                        make_tuple(createbridge, account, row.rex->net_loan_payment, row.rex->net_loan_fund))
+                        make_tuple(createescrow, account, row.rex->net_loan_payment, row.rex->net_loan_fund))
                         .send();
                 }
                 else
@@ -34,7 +34,7 @@ public:
 
     void rentcpu(string dapp, name account)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
         if (iterator != dapps.end())
             dapps.modify(iterator, same_payer, [&](auto &row) {
@@ -42,10 +42,10 @@ public:
                 if (row.use_rex == true)
                 {
                     action(
-                        permission_level{createbridge, "active"_n},
+                        permission_level{createescrow, "active"_n},
                         newAccountContract,
                         name("rentcpu"),
-                        make_tuple(createbridge, account, row.rex->cpu_loan_payment, row.rex->cpu_loan_fund))
+                        make_tuple(createescrow, account, row.rex->cpu_loan_payment, row.rex->cpu_loan_fund))
                         .send();
                 }
                 else
@@ -57,7 +57,7 @@ public:
 
     void fundloan(name to, asset quantity, string dapp, string type)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
 
         eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
@@ -67,10 +67,10 @@ public:
             auto loan_record = common::getNetLoanRecord(to);
 
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 name("fundnetloan"),
-                make_tuple(createbridge, loan_record->loan_num, quantity))
+                make_tuple(createescrow, loan_record->loan_num, quantity))
                 .send();
         }
 
@@ -79,10 +79,10 @@ public:
             auto loan_record = common::getCpuLoanRecord(to);
 
             action(
-                permission_level{createbridge, "active"_n},
+                permission_level{createescrow, "active"_n},
                 newAccountContract,
                 name("fundcpuloan"),
-                make_tuple(createbridge, loan_record->loan_num, quantity))
+                make_tuple(createescrow, loan_record->loan_num, quantity))
                 .send();
         }
     }
@@ -92,7 +92,7 @@ public:
         asset required_cpu_loan_bal;
         asset required_net_loan_bal;
 
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
 
         eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
@@ -108,10 +108,10 @@ public:
             if (required_net_loan_bal > asset(0'0000, common::getCoreSymbol()))
             {
                 action(
-                    permission_level{createbridge, "active"_n},
+                    permission_level{createescrow, "active"_n},
                     newAccountContract,
                     name("fundnetloan"),
-                    make_tuple(createbridge, net_loan_record->loan_num, required_net_loan_bal))
+                    make_tuple(createescrow, net_loan_record->loan_num, required_net_loan_bal))
                     .send();
             }
         }
@@ -129,10 +129,10 @@ public:
             if (required_cpu_loan_bal > asset(0'0000, common::getCoreSymbol()))
             {
                 action(
-                    permission_level{createbridge, "active"_n},
+                    permission_level{createescrow, "active"_n},
                     newAccountContract,
                     name("fundcpuloan"),
-                    make_tuple(createbridge, cpu_loan_record->loan_num, required_cpu_loan_bal))
+                    make_tuple(createescrow, cpu_loan_record->loan_num, required_cpu_loan_bal))
                     .send();
             }
         }

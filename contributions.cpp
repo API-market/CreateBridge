@@ -17,14 +17,14 @@ class contributions
 {
 
 public:
-    name createbridge = common::createbridgeName;
+    name createescrow = common::createescrowContractName;
 
     /*
      * Returns the total balance contributed for a dapp
      */
     asset balanceFor(string &memo)
     {
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         uint64_t payerId = common::toUUID(memo);
         auto payer = balances.find(payerId);
         if (payer == balances.end())
@@ -48,7 +48,7 @@ public:
      */
     bool checkIfWhitelisted(name account, string dapp)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
         auto position_in_whitelist = std::find(iterator->custodians.begin(), iterator->custodians.end(), account);
         if (position_in_whitelist != iterator->custodians.end())
@@ -60,7 +60,7 @@ public:
 
     bool checkIfOwner(name account, string dapp)
     {
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto iterator = dapps.find(common::toUUID(dapp));
 
         if (iterator != dapps.end())
@@ -91,10 +91,10 @@ public:
         asset net_balance = asset(0'0000, core_symbol);
         asset cpu_balance = asset(0'0000, core_symbol);
 
-        registry::Registry dapps(createbridge, createbridge.value);
+        registry::Registry dapps(createescrow, createescrow.value);
         auto itr = dapps.find(common::toUUID(dapp));
 
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         auto iterator = balances.find(id);
 
         name newAccountContract = common::getNewAccountContract();
@@ -115,10 +115,10 @@ public:
             {
                 auto rex_balance = net_balance + cpu_balance;
                 action(
-                    permission_level{createbridge, "active"_n},
+                    permission_level{createescrow, "active"_n},
                     newAccountContract,
                     name("deposit"),
-                    make_tuple(createbridge, rex_balance))
+                    make_tuple(createescrow, rex_balance))
                     .send();
             }
         }
@@ -126,7 +126,7 @@ public:
         asset ram_balance = quantity - (net_balance + cpu_balance);
 
         if (iterator == balances.end())
-            balances.emplace(createbridge, [&](auto &row) {
+            balances.emplace(createescrow, [&](auto &row) {
                 row.memo = id;
                 row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
                 row.balance = ram_balance;
@@ -165,7 +165,7 @@ public:
     {
         uint64_t id = common::toUUID(origin);
 
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         auto iterator = balances.find(id);
 
         eosio_assert(iterator != balances.end(), "No balance object");
@@ -202,7 +202,7 @@ public:
     {
         uint64_t id = common::toUUID(origin);
 
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         auto iterator = balances.find(id);
 
         eosio_assert(iterator != balances.end(), "No balance object");
@@ -245,7 +245,7 @@ public:
      */
     asset findContribution(string dapp, name contributor, string type)
     {
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         uint64_t id = common::toUUID(dapp);
         auto iterator = balances.find(id);
 
@@ -296,7 +296,7 @@ public:
      */
     int findRamContribution(string dapp, name contributor)
     {
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         uint64_t id = common::toUUID(dapp);
         auto iterator = balances.find(id);
 
@@ -338,7 +338,7 @@ public:
      */
     vector<balances::chosen_contributors> getContributors(string origin, string memo, uint64_t seed, uint64_t to, asset ram)
     {
-        balances::Balances balances(createbridge, createbridge.value);
+        balances::Balances balances(createescrow, createescrow.value);
         auto iterator = balances.find(common::toUUID(origin));
 
         vector<balances::contributors> initial_contributors = iterator->contributors;

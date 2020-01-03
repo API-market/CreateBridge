@@ -18,7 +18,7 @@ struct rexdata
     asset cpu_loan_fund;
 };
 
-struct [[ eosio::table, eosio::contract("createbridge") ]] registryStruct
+struct [[ eosio::table, eosio::contract("createescrow") ]] registryStruct
 {
     name owner;
     string dapp;
