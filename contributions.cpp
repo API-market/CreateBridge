@@ -159,7 +159,7 @@ namespace createescrow {
      * Also checks if the memo account is same as one of the dapp contributors. If yes, then only increases the createdaccount field by 1
      * Called by the create action
      */
-    void create_escrow::subBalance(string memo, string &origin, const asset &quantity, bool memoIsDapp = false)
+    void create_escrow::subBalance(string memo, string &origin, const asset &quantity, bool memoIsDapp)
     {
         uint64_t id = common::toUUID(origin);
 
