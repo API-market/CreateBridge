@@ -1,3 +1,5 @@
+#pragma once
+
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/print.hpp>
 #include <eosiolib/action.hpp>
@@ -28,6 +30,8 @@ namespace createescrow {
 
 
   public:
+    using contract::contract;
+
     create_escrow( name s, name code, datastream<const char*> ds );
 
     [[eosio::action]]
@@ -94,7 +98,7 @@ namespace createescrow {
     void checkIfOwnerOrWhitelisted(name account, string origin);
 
     void addBalance(const name &from, const asset &quantity, string &memo);
-    void subBalance(string memo, string &origin, const asset &quantity, bool memoIsDapp);
+    void subBalance(string memo, string &origin, const asset &quantity, bool memoIsDapp = false);
     void subCpuOrNetBalance(string memo, string &origin, const asset &quantity, string type);
 
     asset findContribution(string dapp, name contributor, string type);

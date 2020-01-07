@@ -7,10 +7,7 @@
 #include "models/registry.h"
 #include "models/bandwidth.h"
 
-#include "airdrops.cpp"
-#include "contributions.cpp"
-#include "rex.cpp"
-#include "stakes.cpp"
+#include "createescrow.hpp"
 
 namespace createescrow {
     using namespace eosio;
@@ -20,7 +17,7 @@ namespace createescrow {
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
      * @return
      */
-    void createescrow::createJointAccount(string &memo, name &account, string &origin, accounts::authority &ownerAuth, accounts::authority &activeAuth, name referral)
+    void create_escrow::createJointAccount(string &memo, name &account, string &origin, accounts::authority &ownerAuth, accounts::authority &activeAuth, name referral)
     {
         // memo is the account that pays the remaining balance i.e
         // balance needed for new account creation - (balance contributed by the contributors)
@@ -199,7 +196,7 @@ namespace createescrow {
     void create_escrow::createAccount(string dapp, name &account, accounts::authority &ownerauth, accounts::authority &activeauth, asset &ram, asset &net, asset &cpu, uint64_t pricekey, bool use_rex, bool isfixed, name referral)
     {
         accounts::newaccount new_account = accounts::newaccount{
-            .creator = createescrow,
+            .creator = _self,
             .name = account,
             .owner = ownerauth,
             .active = activeauth};
@@ -209,26 +206,26 @@ namespace createescrow {
         if (isfixed)
         { // check if the account creation is fixed
             action(
-                permission_level{createescrow, "active"_n},
+                permission_level{_self, "active"_n},
                 newAccountContract,
                 newAccountAction,
-                make_tuple(createescrow, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey, referral))
+                make_tuple(_self, account, ownerauth.keys[0].key, activeauth.keys[0].key, pricekey, referral))
                 .send();
         }
         else
         {
             action(
-                permission_level{createescrow, "active"_n},
+                permission_level{_self, "active"_n},
                 newAccountContract,
                 name("newaccount"),
                 new_account)
                 .send();
 
             action(
-                permission_level{createescrow, "active"_n},
+                permission_level{_self, "active"_n},
                 newAccountContract,
                 name("buyram"),
-                make_tuple(createescrow, account, ram))
+                make_tuple(_self, account, ram))
                 .send();
 
             if (use_rex == true)
@@ -238,12 +235,12 @@ namespace createescrow {
             }
             else
             {
-                if(net + cpu > asset(0'0000,coreSymbol)){
+                if(net + cpu > asset(0'0000,common::getCoreSymbol())){
                     action(
-                        permission_level{createescrow, "active"_n},
+                        permission_level{_self, "active"_n},
                         newAccountContract,
                         name("delegatebw"),
-                        make_tuple(createescrow, account, net, cpu, false))
+                        make_tuple(_self, account, net, cpu, false))
                         .send();
                 }
             }
