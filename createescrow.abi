@@ -48,6 +48,21 @@
             ]
         },
         {
+            "name": "clean",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "cleanreg",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "cleantoken",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "contributors",
             "base": "",
             "fields": [
@@ -549,6 +564,21 @@
         }
     ],
     "actions": [
+        {
+            "name": "clean",
+            "type": "clean",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cleanreg",
+            "type": "cleanreg",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cleantoken",
+            "type": "cleantoken",
+            "ricardian_contract": ""
+        },
         {
             "name": "create",
             "type": "create",
