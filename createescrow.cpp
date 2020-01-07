@@ -29,7 +29,24 @@ namespace createescrow {
                                                                           balances(_self, _self.value),
                                                                           token(_self, _self.value){}
     
-    
+    void create_escrow::clean()
+    {
+        require_auth(_self);
+        create_escrow::cleanTable<Balances>();
+    }
+
+    void create_escrow::cleanreg()
+    {
+        require_auth(_self);
+        create_escrow::cleanTable<Registry>();
+    }
+
+    void create_escrow::cleantoken()
+    {
+        require_auth(_self);
+        create_escrow::cleanTable<Token>();
+    }
+
     /***
      * Called to specify the following details:
      * symbol:              the core token of the chain or the token used to pay for new user accounts of the chain  
@@ -239,4 +256,48 @@ namespace createescrow {
     void create_escrow::ping(name & from){
         print('ping');
     }
+
+    void create_escrow::transfer(const name &from, const name &to, const asset &quantity, string &memo)
+    {
+        if (to != _self)
+            return;
+        if (from == name("eosio.stake"))
+        {
+            return create_escrow::addTotalUnstaked(quantity);
+        };
+
+        if (quantity.symbol != getCoreSymbol())
+            return;
+        if (memo.length() > 64)
+            return;
+        create_escrow::addBalance(from, quantity, memo);
+    }
+
+  extern "C"
+  {
+    void apply(uint64_t receiver, uint64_t code, uint64_t action)
+    {
+        auto self = receiver;
+
+        if (code == self)
+            switch (action)
+            {
+                EOSIO_DISPATCH_HELPER(create_escrow, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(stake)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans)(ping))
+            }
+
+        else
+        {
+            if (code == name("eosio.token").value && action == name("transfer").value)
+            {
+                execute_action(name(receiver), name(code), &create_escrow::transfer);
+            }
+        }
+        // if (code != self){
+        //     if (code == name("eosio.token").value && action == name("transfer").value)
+        //     {
+        //         execute_action(name(receiver), name(code), &createescrow::create_escrow::transfer);
+        //     }
+        // }
+    }
+}
 }
