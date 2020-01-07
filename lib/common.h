@@ -11,8 +11,6 @@ using std::vector;
 namespace common
 {
 static const symbol S_RAM = symbol("RAMCORE", 4);
-static const name createescrowContractName = name("createescrow");
-
 inline static uint64_t toUUID(string username)
 {
     return std::hash<string>{}(username);
@@ -68,40 +66,6 @@ struct [[ eosio::table, eosio::contract("createescrow") ]] token
 
 typedef eosio::multi_index<"token"_n, token> Token;
 
-/***
-     * Returns the symbol of the core token of the chain or the token used to pay for new account creation
-     * @return
-     */
-symbol getCoreSymbol()
-{
-    Token token(createescrowContractName, createescrowContractName.value);
-    return token.begin()->S_SYS;
-}
-
-/***
-     * Returns the contract name for new account action
-     */
-name getNewAccountContract()
-{
-    Token token(createescrowContractName, createescrowContractName.value);
-    return token.begin()->newaccountcontract;
-}
-
-name getNewAccountAction()
-{
-    Token token(createescrowContractName, createescrowContractName.value);
-    return token.begin()->newaccountaction;
-}
-
-/**
-     * Returns the minimum bytes of RAM for new account creation
-     */
-uint64_t getMinimumRAM()
-{
-    Token token(createescrowContractName, createescrowContractName.value);
-    return token.begin()->min_ram;
-}
-
 /**********************************************/
 /***                                        ***/
 /***            RAM calculations            ***/
@@ -139,52 +103,6 @@ typedef eosio::multi_index<"pricetable"_n, pricetable> priceTable;
 
 typedef eosio::multi_index<"rammarket"_n, rammarket> RamInfo;
 
-/***
-     * Returns the price of ram for given bytes
-     */
-
-asset getRamCost(uint64_t ram_bytes, uint64_t priceKey)
-{
-    asset ramcost;
-    if (ram_bytes > 0)
-    {
-        RamInfo ramInfo(name("eosio"), name("eosio").value);
-        auto ramData = ramInfo.find(S_RAM.raw());
-        symbol coreSymbol = getCoreSymbol();
-        eosio_assert(ramData != ramInfo.end(), "Could not get RAM info");
-
-        uint64_t base = ramData->base.balance.amount;
-        uint64_t quote = ramData->quote.balance.amount;
-        ramcost = asset((((double)quote / base)) * ram_bytes, coreSymbol);
-    }
-    else
-    { //if account is tier fixed
-        Token token(createescrowContractName, createescrowContractName.value);
-        name newaccountcontract = getNewAccountContract();
-        priceTable price(newaccountcontract, newaccountcontract.value);
-        auto priceItr = price.find(priceKey);
-        ramcost.amount = priceItr->createprice.amount - (priceItr->netamount.amount + priceItr->cpuamount.amount);
-        ramcost.symbol = priceItr->createprice.symbol;
-    }
-    return ramcost;
-}
-
-asset getFixedCpu(uint64_t priceKey)
-{
-    name newaccountcontract = getNewAccountContract();
-    priceTable price(newaccountcontract, newaccountcontract.value);
-    auto priceItr = price.find(priceKey);
-    return priceItr->cpuamount;
-}
-
-asset getFixedNet(uint64_t priceKey)
-{
-    name newaccountcontract = getNewAccountContract();
-    priceTable price(newaccountcontract, newaccountcontract.value);
-    auto priceItr = price.find(priceKey);
-    return priceItr->netamount;
-}
-
 struct rex_loan
 {
     uint8_t version = 0;
@@ -211,45 +129,5 @@ typedef eosio::multi_index<"netloan"_n, rex_loan,
                            indexed_by<"byexpr"_n, const_mem_fun<rex_loan, uint64_t, &rex_loan::by_expr>>,
                            indexed_by<"byowner"_n, const_mem_fun<rex_loan, uint64_t, &rex_loan::by_owner>>>
     rex_net_loan_table;
-
-auto getCpuLoanRecord(name account)
-{
-    rex_cpu_loan_table cpu_loans(name("eosio"), name("eosio").value);
-    auto cpu_idx = cpu_loans.get_index<"byowner"_n>();
-    auto loans = cpu_idx.find(createescrowContractName.value);
-
-    auto i = cpu_idx.lower_bound(createescrowContractName.value);
-
-    while (i != cpu_idx.end())
-    {
-        if (i->receiver == account)
-        {
-            return i;
-        };
-        i++;
-    };
-
-    eosio_assert(false, ("No existing loan found for" + account.to_string()).c_str());
-}
-
-auto getNetLoanRecord(name account)
-{
-    rex_net_loan_table net_loans(name("eosio"), name("eosio").value);
-    auto net_idx = net_loans.get_index<"byowner"_n>();
-    auto loans = net_idx.find(createescrowContractName.value);
-
-    auto i = net_idx.lower_bound(createescrowContractName.value);
-
-    while (i != net_idx.end())
-    {
-        if (i->receiver == account)
-        {
-            return i;
-        };
-        i++;
-    };
-
-    eosio_assert(false, ("No existing loan found for" + account.to_string()).c_str());
-}
 
 }; // namespace common

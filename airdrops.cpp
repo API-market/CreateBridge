@@ -1,9 +1,7 @@
+#include "createescrow.hpp"
 
 #include "lib/common.h"
 #include "models/registry.h"
-
-#include "createescrow.hpp"
-
 namespace createescrow {
     /*
     * Called when a new user account is created

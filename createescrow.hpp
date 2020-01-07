@@ -46,41 +46,94 @@ namespace createescrow {
     [[eosio::action]]
     void create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral);
 
-    // [[eosio::action]]
-    // void reclaim(name reclaimer, string dapp, string sym);
+    [[eosio::action]]
+    void reclaim(name reclaimer, string dapp, string sym);
 
-    // [[eosio::action]]
-    // void refundstakes(name & from, string & origin);
+    [[eosio::action]]
+    void refundstakes(name & from, string & origin);
 
-    // [[eosio::action]]
-    // void stake(name & from, name & to, string & origin, asset & net, asset & cpu);
+    [[eosio::action]]
+    void stake(name & from, name & to, string & origin, asset & net, asset & cpu);
 
-    // [[eosio::action]]
-    // void unstake(name & from, name & to, string & origin);
+    [[eosio::action]]
+    void unstake(name & from, name & to, string & origin);
 
-    // [[eosio::action]]
-    // void unstakenet(name & from, name & to, string & origin);
+    [[eosio::action]]
+    void unstakenet(name & from, name & to, string & origin);
 
-    // [[eosio::action]]
-    // void unstakecpu(name & from, name & to, string & origin);
+    [[eosio::action]]
+    void unstakecpu(name & from, name & to, string & origin);
 
-    // [[eosio::action]]
-    // void fundnetloan(name & from, name & to, asset quantity, string & origin);
+    [[eosio::action]]
+    void fundnetloan(name & from, name & to, asset quantity, string & origin);
 
-    // [[eosio::action]]
-    // void fundcpuloan(name & from, name & to, asset quantity, string & origin);
+    [[eosio::action]]
+    void fundcpuloan(name & from, name & to, asset quantity, string & origin);
 
-    // [[eosio::action]]
-    // void rentnet(name & from, name & to, string & origin);
+    [[eosio::action]]
+    void rentnet(name & from, name & to, string & origin);
 
-    // [[eosio::action]]
-    // void rentcpu(name & from, name & to, string & origin);
+    [[eosio::action]]
+    void rentcpu(name & from, name & to, string & origin);
 
-    // [[eosio::action]]
-    // void topuploans(name & from, name & to, asset & cpuquantity, asset & netquantity, string & origin);
+    [[eosio::action]]
+    void topuploans(name & from, name & to, asset & cpuquantity, asset & netquantity, string & origin);
 
-    // [[eosio::action]]
-    // void ping(name & from);
+    [[eosio::action]]
+    void ping(name & from);
+
+/***
+* Checks if an account is whitelisted for a dapp by the owner of the dapp
+* @return
+*/
+bool checkIfWhitelisted(name account, string dapp)
+{
+    registry::Registry dapps(_self, _self.value);
+    auto iterator = dapps.find(common::toUUID(dapp));
+    auto position_in_whitelist = std::find(iterator->custodians.begin(), iterator->custodians.end(), account);
+    if (position_in_whitelist != iterator->custodians.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+bool checkIfOwner(name account, string dapp)
+{
+    registry::Registry dapps(_self, _self.value);
+    auto iterator = dapps.find(common::toUUID(dapp));
+
+    if (iterator != dapps.end())
+    {
+        if (account == iterator->owner)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+    
+void checkIfOwnerOrWhitelisted(name account, string origin)
+{
+    registry::Registry dapps(_self, _self.value);
+    auto iterator = dapps.find(common::toUUID(origin));
+
+    if (iterator != dapps.end())
+    {
+        if (account == iterator->owner)
+            require_auth(account);
+        else if (create_escrow::checkIfWhitelisted(account, origin))
+            require_auth(account);
+        else if (origin == "free")
+            print("using globally available free funds to create account");
+        else
+            eosio_assert(false, ("only owner or whitelisted accounts can call this action for " + origin).c_str());
+    }
+    else
+    {
+        eosio_assert(false, ("no owner account found for " + origin).c_str());
+    }
+}
 
     using init_action = eosio::action_wrapper<"init"_n, &create_escrow::init>;
     using define_action = eosio::action_wrapper<"define"_n, &create_escrow::define>;
@@ -93,10 +146,6 @@ namespace createescrow {
     asset balanceFor(string &memo);
     bool hasBalance(string memo, const asset &quantity);
 
-    bool checkIfWhitelisted(name account, string dapp);
-    bool checkIfOwner(name account, string dapp);
-    void checkIfOwnerOrWhitelisted(name account, string origin);
-
     void addBalance(const name &from, const asset &quantity, string &memo);
     void subBalance(string memo, string &origin, const asset &quantity, bool memoIsDapp = false);
     void subCpuOrNetBalance(string memo, string &origin, const asset &quantity, string type);
@@ -108,15 +157,47 @@ namespace createescrow {
     void createJointAccount(string &memo, name &account, string &origin, accounts::authority &ownerAuth, accounts::authority &activeAuth, name referral);
     void createAccount(string dapp, name &account, accounts::authority &ownerauth, accounts::authority &activeauth, asset &ram, asset &net, asset &cpu, uint64_t pricekey, bool use_rex, bool isfixed, name referral);
 
-    void rentnet(string dapp, name account);
-    void rentcpu(string dapp, name account);
     void fundloan(name to, asset quantity, string dapp, string type);
-    std::tuple<asset, asset> topup(name to, asset cpuquantity, asset netquantity, string dapp);
+    void rentrexnet(string dapp, name account);
+    void rentrexcpu(string dapp, name account);
+    std::tuple<asset, asset> rextopup(name to, asset cpuquantity, asset netquantity, string dapp);
 
     void stakeCpuOrNet(name to, asset &net, asset &cpu);
     void addToUnstakedTable(name from, string dapp, asset net, asset cpu);
-    void unstakeCpuOrNet(name from, name to, string dapp, bool unstakenet, bool unstakecpu);
+    void unstakeCpuOrNet(name from, name to, string dapp, bool unstakenet = true, bool unstakecpu = true);
     void addTotalUnstaked(const asset &quantity);
     void reclaimbwbalances(name from, string dapp);
+
+    symbol getCoreSymbol();
+    name getNewAccountContract();
+    name getNewAccountAction();
+    uint64_t getMinimumRAM();
+    asset getRamCost(uint64_t ram_bytes, uint64_t priceKey);
+    asset getFixedCpu(uint64_t priceKey);
+    asset getFixedNet(uint64_t priceKey);
+    auto getCpuLoanRecord(name account);
+    auto getNetLoanRecord(name account);
   };
 }
+
+// extern "C"
+// {
+//     void apply(uint64_t receiver, uint64_t code, uint64_t action)
+//     {
+//         auto self = receiver;
+
+//         if (code == self)
+//             switch (action)
+//             {
+//                 EOSIO_DISPATCH_HELPER(createescrow, (createescrow::create_escrow::init)(createescrow::create_escrow::clean)(createescrow::create_escrow::cleanreg)(createescrow::create_escrow::cleantoken)(createescrow::create_escrow::create)(createescrow::create_escrow::define)(createescrow::create_escrow::whitelist)(createescrow::create_escrow::reclaim)(createescrow::create_escrow::refundstakes)(createescrow::create_escrow::unstake)(createescrow::create_escrow::unstakenet)(createescrow::create_escrow::unstakecpu)(createescrow::create_escrow::fundnetloan)(createescrow::create_escrow::fundcpuloan)(createescrow::create_escrow::rentnet)(createescrow::create_escrow::rentcpu)(createescrow::create_escrow::topuploans)(createescrow::create_escrow::ping))
+//             }
+
+//         else
+//         {
+//             if (code == name("eosio.token").value && action == name("transfer").value)
+//             {
+//                 execute_action(name(receiver), name(code), &createescrow::create_escrow::transfer);
+//             }
+//         }
+//     }
+// };

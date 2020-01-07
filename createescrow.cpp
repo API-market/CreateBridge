@@ -2,6 +2,8 @@
 #include <eosiolib/print.hpp>
 #include <eosiolib/action.hpp>
 
+#include "createescrow.hpp"
+
 #include "lib/common.h"
 
 #include "models/accounts.h"
@@ -9,9 +11,9 @@
 #include "models/registry.h"
 #include "models/bandwidth.h"
 
+#include "constants.cpp"
 #include "createaccounts.cpp"
-#include "createescrow.hpp"
-
+#include "stakes.cpp"
 
 namespace createescrow {
     using namespace eosio;
@@ -76,7 +78,7 @@ namespace createescrow {
         eosio_assert(iterator == dapps.end() || (iterator != dapps.end() && iterator->owner == owner),
                      ("the dapp " + dapp + " is already registered by another account").c_str());
 
-        uint64_t min_ram = getMinimumRAM();
+        uint64_t min_ram = create_escrow::getMinimumRAM();
 
         eosio_assert(ram_bytes >= min_ram, ("ram for new accounts must be equal to or greater than " + to_string(min_ram) + " bytes.").c_str());
 
@@ -129,40 +131,113 @@ namespace createescrow {
     }
 
     /***
-     * Creates a new user account. 
-     * It also airdrops custom dapp tokens to the new user account if a dapp owner has opted for airdrops
-     * memo:                name of the account paying for the balance left after getting the donation from the dapp contributors 
-     * account:             name of the account to be created
-     * ownerkey,activekey:  key pair for the new account  
-     * origin:              the string representing the dapp to create the new user account for. For ex- everipedia.org, lumeos
-     * For new user accounts, it follows the following steps:
-     * 1. Choose a contributor, if any, for the dapp to fund the cost for new account creation
-     * 2. Check if the contributor is funding 100 %. If not, check if the "memo" account has enough to fund the remaining cost of account creation
-    */
-    void create_escrow::create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral)
+     * Transfers the remaining balance of a contributor from createbridge back to the contributor
+     * reclaimer: account trying to reclaim the balance
+     * dapp:      the dapp name for which the account is trying to reclaim the balance
+     * sym:       symbol of the tokens to be reclaimed. It can have value based on the following scenarios:
+     *            - reclaim the "native" token balance used to create accounts. For ex - EOS/SYS
+     *            - reclaim the remaining airdrop token balance used to airdrop dapp tokens to new user accounts. For ex- IQ/LUM
+     */
+    void create_escrow::reclaim(name reclaimer, string dapp, string sym)
     {
-        auto iterator = dapps.find(toUUID(origin));
+        require_auth(reclaimer);
 
-        // Only owner/whitelisted account for the dapp can create accounts
-        if (iterator != dapps.end())
+        asset reclaimer_balance;
+        bool nocontributor;
+
+        // check if the user is trying to reclaim the system tokens
+        if (sym == create_escrow::getCoreSymbol().code().to_string())
         {
-            if (name(memo) == iterator->owner)
-                require_auth(iterator->owner);
-            else if (create_escrow::checkIfWhitelisted(name(memo), origin))
-                require_auth(name(memo));
-            else if (origin == "free")
-                print("using globally available free funds to create account");
+
+            auto iterator = balances.find(common::toUUID(dapp));
+
+            if (iterator != balances.end())
+            {
+
+                balances.modify(iterator, same_payer, [&](auto &row) {
+                    auto pred = [reclaimer](const contributors &item) {
+                        return item.contributor == reclaimer;
+                    };
+                    auto reclaimer_record = remove_if(std::begin(row.contributors), std::end(row.contributors), pred);
+                    if (reclaimer_record != row.contributors.end())
+                    {
+                        reclaimer_balance = reclaimer_record->balance;
+
+                        // only erase the contributor row if the cpu and net balances are also 0
+                        if (reclaimer_record->net_balance == asset(0'0000, getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, getCoreSymbol()))
+                        {
+                            row.contributors.erase(reclaimer_record, row.contributors.end());
+                        }
+                        else
+                        {
+                            reclaimer_record->balance -= reclaimer_balance;
+                        }
+
+                        row.balance -= reclaimer_balance;
+                    }
+                    else
+                    {
+                        eosio_assert(false, ("no remaining contribution for " + dapp + " by " + reclaimer.to_string()).c_str());
+                    }
+
+                    nocontributor = row.contributors.empty();
+                });
+
+                // delete the entire balance object if no contributors are there for the dapp
+                if (nocontributor && iterator->balance == asset(0'0000, getCoreSymbol()))
+                {
+                    balances.erase(iterator);
+                }
+
+                // transfer the remaining balance for the contributor from the createbridge account to contributor's account
+                auto memo = "reimburse the remaining balance to " + reclaimer.to_string();
+                action(
+                    permission_level{_self, "active"_n},
+                    name("eosio.token"),
+                    name("transfer"),
+                    make_tuple(_self, reclaimer, reclaimer_balance, memo))
+                    .send();
+            }
             else
-                eosio_assert(false, ("only owner or whitelisted accounts can create new user accounts for " + origin).c_str());
+            {
+                eosio_assert(false, ("no funds given by " + reclaimer.to_string() + " for " + dapp).c_str());
+            }
         }
+        // user is trying to reclaim custom dapp tokens
         else
         {
-            eosio_assert(false, ("no owner account found for " + origin).c_str());
+            auto iterator = dapps.find(toUUID(dapp));
+            if (iterator != dapps.end())
+                dapps.modify(iterator, same_payer, [&](auto &row) {
+                    if (row.airdrop->contract != name("") && row.airdrop->tokens.symbol.code().to_string() == sym && row.owner == name(reclaimer))
+                    {
+                        auto memo = "reimburse the remaining airdrop balance for " + dapp + " to " + reclaimer.to_string();
+                        if (row.airdrop->tokens != asset(0'0000, row.airdrop->tokens.symbol))
+                        {
+                            action(
+                                permission_level{_self, "active"_n},
+                                row.airdrop->contract,
+                                name("transfer"),
+                                make_tuple(_self, reclaimer, row.airdrop->tokens, memo))
+                                .send();
+                            row.airdrop->tokens -= row.airdrop->tokens;
+                        }
+                        else
+                        {
+                            eosio_assert(false, ("No remaining airdrop balance for " + dapp + ".").c_str());
+                        }
+                    }
+                    else
+                    {
+                        eosio_assert(false, ("the remaining airdrop balance for " + dapp + " can only be claimed by its owner/whitelisted account.").c_str());
+                    }
+                });
         }
+    }
 
-        authority owner{.threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {}};
-        authority active{.threshold = 1, .keys = {key_weight{activekey, 1}}, .accounts = {}, .waits = {}};
-        create_escrow::createJointAccount(memo, account, origin, owner, active, referral);
+    // to check if createbridge is deployed and functioning
+    void create_escrow::ping(name & from){
+        print('ping');
     }
 }
 

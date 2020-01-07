@@ -5,13 +5,15 @@
 #include <algorithm>
 #include <cstdlib>
 
+#include "createescrow.hpp"
+
 #include "lib/common.h"
 
 #include "models/accounts.h"
 #include "models/balances.h"
 #include "models/registry.h"
 
-#include "createescrow.hpp"
+#include "constants.cpp"
 
 namespace createescrow {
     using namespace eosio;
@@ -26,7 +28,7 @@ namespace createescrow {
         uint64_t payerId = common::toUUID(memo);
         auto payer = balances.find(payerId);
         if (payer == balances.end())
-            return asset(0'0000, common::getCoreSymbol());
+            return asset(0'0000, create_escrow::getCoreSymbol());
         return payer->balance;
     } 
 
@@ -36,39 +38,6 @@ namespace createescrow {
     bool create_escrow::hasBalance(string memo, const asset &quantity)
     {
         return balanceFor(memo).amount > quantity.amount;
-    }
-
-    // TODO: move the following 2 functions to a common library. Replicated in createaccounts
-
-    /***
-     * Checks if an account is whitelisted for a dapp by the owner of the dapp
-     * @return
-     */
-    bool create_escrow::checkIfWhitelisted(name account, string dapp)
-    {
-        registry::Registry dapps(_self, _self.value);
-        auto iterator = dapps.find(common::toUUID(dapp));
-        auto position_in_whitelist = std::find(iterator->custodians.begin(), iterator->custodians.end(), account);
-        if (position_in_whitelist != iterator->custodians.end())
-        {
-            return true;
-        }
-        return false;
-    }
-
-    bool create_escrow::checkIfOwner(name account, string dapp)
-    {
-        registry::Registry dapps(_self, _self.value);
-        auto iterator = dapps.find(common::toUUID(dapp));
-
-        if (iterator != dapps.end())
-        {
-            if (account == iterator->owner)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     /*
@@ -81,7 +50,7 @@ namespace createescrow {
         vector<string> stats = common::split(memo, ",");
         auto dapp = stats[0];
         uint64_t id = common::toUUID(dapp);
-        symbol core_symbol = common::getCoreSymbol();
+        symbol core_symbol = create_escrow::getCoreSymbol();
 
         int ram = dapp == "free" ? 100 : stoi(stats[1]);
         int totalaccounts = stats.size() > 2 ? stoi(stats[2]) : -1;
@@ -95,7 +64,7 @@ namespace createescrow {
         balance::Balances balances(_self, _self.value);
         auto iterator = balances.find(id);
 
-        name newAccountContract = common::getNewAccountContract();
+        name newAccountContract = create_escrow::getNewAccountContract();
 
         // only owner or the whitelisted account are allowed to contribute for cpu and net
         // for globally available free funds, anybody can contribute
@@ -247,7 +216,7 @@ namespace createescrow {
         uint64_t id = common::toUUID(dapp);
         auto iterator = balances.find(id);
 
-        symbol coreSymbol = common::getCoreSymbol();
+        symbol coreSymbol = create_escrow::getCoreSymbol();
 
         auto msg = "No contribution found for " + dapp + " by " + contributor.to_string() + ".";
 
@@ -298,7 +267,7 @@ namespace createescrow {
         uint64_t id = common::toUUID(dapp);
         auto iterator = balances.find(id);
 
-        symbol coreSymbol = common::getCoreSymbol();
+        symbol coreSymbol = create_escrow::getCoreSymbol();
 
         auto msg = "No contribution found for " + dapp + " by " + contributor.to_string() + ". Checking the globally available free fund.";
 

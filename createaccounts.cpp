@@ -1,5 +1,7 @@
 #include <eosiolib/eosio.hpp>
 
+#include "createescrow.hpp"
+
 #include "lib/common.h"
 
 #include "models/accounts.h"
@@ -7,12 +9,52 @@
 #include "models/registry.h"
 #include "models/bandwidth.h"
 
-#include "createescrow.hpp"
+#include "airdrops.cpp"
+#include "contributions.cpp"
+#include "constants.cpp"
+#include "rex.cpp"
 
 namespace createescrow {
     using namespace eosio;
     using namespace std;
 
+    /***
+     * Creates a new user account. 
+     * It also airdrops custom dapp tokens to the new user account if a dapp owner has opted for airdrops
+     * memo:                name of the account paying for the balance left after getting the donation from the dapp contributors 
+     * account:             name of the account to be created
+     * ownerkey,activekey:  key pair for the new account  
+     * origin:              the string representing the dapp to create the new user account for. For ex- everipedia.org, lumeos
+     * For new user accounts, it follows the following steps:
+     * 1. Choose a contributor, if any, for the dapp to fund the cost for new account creation
+     * 2. Check if the contributor is funding 100 %. If not, check if the "memo" account has enough to fund the remaining cost of account creation
+    */
+    void create_escrow::create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral)
+    {
+        auto iterator = dapps.find(toUUID(origin));
+
+        // Only owner/whitelisted account for the dapp can create accounts
+        if (iterator != dapps.end())
+        {
+            if (name(memo) == iterator->owner)
+                require_auth(iterator->owner);
+            else if (create_escrow::checkIfWhitelisted(name(memo), origin))
+                require_auth(name(memo));
+            else if (origin == "free")
+                print("using globally available free funds to create account");
+            else
+                eosio_assert(false, ("only owner or whitelisted accounts can create new user accounts for " + origin).c_str());
+        }
+        else
+        {
+            eosio_assert(false, ("no owner account found for " + origin).c_str());
+        }
+
+        authority owner{.threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {}};
+        authority active{.threshold = 1, .keys = {key_weight{activekey, 1}}, .accounts = {}, .waits = {}};
+        create_escrow::createJointAccount(memo, account, origin, owner, active, referral);
+    }
+    
     /***
      * Checks if an account is whitelisted for a dapp by the owner of the dapp
      * @return
@@ -30,7 +72,7 @@ namespace createescrow {
         bool useOwnerCpuBalance = false;
         bool useOwnerNetBalance = false;
 
-        symbol coreSymbol = common::getCoreSymbol();
+        symbol coreSymbol = create_escrow::getCoreSymbol();
         asset ramFromDapp = asset(0'0000, coreSymbol);
 
         balance::Balances balances(_self, _self.value);
@@ -48,7 +90,7 @@ namespace createescrow {
         }
 
         // cost of required ram
-        asset ram = common::getRamCost(ram_bytes, iterator->pricekey);
+        asset ram = create_escrow::getRamCost(ram_bytes, iterator->pricekey);
 
         asset net;
         asset net_balance;
@@ -101,8 +143,8 @@ namespace createescrow {
         }
         else
         {
-            net = common::getFixedNet(iterator->pricekey);
-            cpu = common::getFixedCpu(iterator->pricekey);
+            net = create_escrow::getFixedNet(iterator->pricekey);
+            cpu = create_escrow::getFixedCpu(iterator->pricekey);
         }
 
         asset ramFromPayer = ram;
@@ -168,28 +210,6 @@ namespace createescrow {
         create_escrow::airdrop(origin, account);
     }
 
-    void create_escrow::checkIfOwnerOrWhitelisted(name account, string origin)
-    {
-        registry::Registry dapps(_self, _self.value);
-        auto iterator = dapps.find(common::toUUID(origin));
-
-        if (iterator != dapps.end())
-        {
-            if (account == iterator->owner)
-                require_auth(account);
-            else if (create_escrow::checkIfWhitelisted(account, origin))
-                require_auth(account);
-            else if (origin == "free")
-                print("using globally available free funds to create account");
-            else
-                eosio_assert(false, ("only owner or whitelisted accounts can call this action for " + origin).c_str());
-        }
-        else
-        {
-            eosio_assert(false, ("no owner account found for " + origin).c_str());
-        }
-    }
-
     /***
      * Calls the chain to create a new account
      */
@@ -201,8 +221,8 @@ namespace createescrow {
             .owner = ownerauth,
             .active = activeauth};
 
-        name newAccountContract = common::getNewAccountContract();
-        name newAccountAction = common::getNewAccountAction();
+        name newAccountContract = create_escrow::getNewAccountContract();
+        name newAccountAction = create_escrow::getNewAccountAction();
         if (isfixed)
         { // check if the account creation is fixed
             action(
@@ -230,12 +250,12 @@ namespace createescrow {
 
             if (use_rex == true)
             {
-                create_escrow::rentnet(dapp, account);
-                create_escrow::rentcpu(dapp, account);
+                create_escrow::rentrexnet(dapp, account);
+                create_escrow::rentrexcpu(dapp, account);
             }
             else
             {
-                if(net + cpu > asset(0'0000,common::getCoreSymbol())){
+                if(net + cpu > asset(0'0000,create_escrow::getCoreSymbol())){
                     action(
                         permission_level{_self, "active"_n},
                         newAccountContract,
