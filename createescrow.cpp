@@ -10,72 +10,31 @@
 #include "models/bandwidth.h"
 
 #include "createaccounts.cpp"
+#include "createescrow.hpp"
 
-using namespace eosio;
-using namespace common;
-using namespace accounts;
-using namespace balances;
-using namespace bandwidth;
-using namespace registry;
-using namespace std;
 
-CONTRACT createescrow : contract, public createaccounts
-{
-private:
-    Registry dapps;
-    Balances balances;
-    Token token;
+namespace createescrow {
+    using namespace eosio;
+    using namespace common;
+    using namespace accounts;
+    using namespace balance;
+    using namespace bandwidth;
+    using namespace registry;
+    using namespace std;
 
-public:
-    using contract::contract;
-    createescrow(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),
+    create_escrow::create_escrow(name s, name code, datastream<const char *> ds) : contract(s, code, ds),
                                                                           dapps(_self, _self.value),
                                                                           balances(_self, _self.value),
-                                                                          token(_self, _self.value) {}
-
-    template <typename T>
-    void cleanTable()
-    {
-        T db(_self, _self.value);
-        while (db.begin() != db.end())
-        {
-            auto itr = --db.end();
-            db.erase(itr);
-        }
-    }
-
-    ACTION clean()
-    {
-        require_auth(_self);
-        cleanTable<Balances>();
-    }
-
-    ACTION cleanreg()
-    {
-        require_auth(_self);
-        cleanTable<Registry>();
-    }
-
-    ACTION cleantoken()
-    {
-        require_auth(_self);
-        cleanTable<Token>();
-    }
-
-    /**********************************************/
-    /***                                        ***/
-    /***                Actions                 ***/
-    /***                                        ***/
-    /**********************************************/
-
+                                                                          token(_self, _self.value){}
+    
+    
     /***
      * Called to specify the following details:
      * symbol:              the core token of the chain or the token used to pay for new user accounts of the chain  
      * newAccountContract:  the contract to call for new account action 
      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
     */
-
-    ACTION init(const symbol &symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram)
+    void create_escrow::init(const symbol &symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram)
     {
         require_auth(_self);
 
@@ -108,7 +67,7 @@ public:
      * Only the owner account/whitelisted account will be able to create new user account for the dapp
      */
 
-    ACTION define(name & owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata & airdrop, bool use_rex, rexdata &rex)
+    void create_escrow::define(name & owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata & airdrop, bool use_rex, rexdata &rex)
     {
         require_auth(dapp != "free" ? owner : _self);
 
@@ -147,11 +106,11 @@ public:
                 row.rex = rex;
             });
     }
-
+    
     /***
      * Lets the owner account of the dapp to whitelist other accounts. 
      */
-    ACTION whitelist(name owner, name account, string dapp)
+    void create_escrow::whitelist(name owner, name account, string dapp)
     {
         require_auth(owner);
 
@@ -180,7 +139,7 @@ public:
      * 1. Choose a contributor, if any, for the dapp to fund the cost for new account creation
      * 2. Check if the contributor is funding 100 %. If not, check if the "memo" account has enough to fund the remaining cost of account creation
     */
-    ACTION create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral)
+    void create_escrow::create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral)
     {
         auto iterator = dapps.find(toUUID(origin));
 
@@ -189,7 +148,7 @@ public:
         {
             if (name(memo) == iterator->owner)
                 require_auth(iterator->owner);
-            else if (checkIfWhitelisted(name(memo), origin))
+            else if (create_escrow::checkIfWhitelisted(name(memo), origin))
                 require_auth(name(memo));
             else if (origin == "free")
                 print("using globally available free funds to create account");
@@ -203,275 +162,463 @@ public:
 
         authority owner{.threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {}};
         authority active{.threshold = 1, .keys = {key_weight{activekey, 1}}, .accounts = {}, .waits = {}};
-        createJointAccount(memo, account, origin, owner, active, referral);
+        create_escrow::createJointAccount(memo, account, origin, owner, active, referral);
     }
+}
 
-    /**********************************************/
-    /***                                        ***/
-    /***               RECLAIMS                 ***/
-    /***                                        ***/
-    /**********************************************/
+// CONTRACT createescrow : contract, public createaccounts
+// {
+// private:
+//     Registry dapps;
+//     Balances balances;
+//     Token token;
 
-    /***
-     * Transfers the remaining balance of a contributor from createbridge back to the contributor
-     * reclaimer: account trying to reclaim the balance
-     * dapp:      the dapp name for which the account is trying to reclaim the balance
-     * sym:       symbol of the tokens to be reclaimed. It can have value based on the following scenarios:
-     *            - reclaim the "native" token balance used to create accounts. For ex - EOS/SYS
-     *            - reclaim the remaining airdrop token balance used to airdrop dapp tokens to new user accounts. For ex- IQ/LUM
-     */
-    ACTION reclaim(name reclaimer, string dapp, string sym)
-    {
-        require_auth(reclaimer);
+// public:
+//     using contract::contract;
+//     createescrow(name receiver, name code, datastream<const char *> ds) : contract(receiver, code, ds),
+//                                                                           dapps(_self, _self.value),
+//                                                                           balances(_self, _self.value),
+//                                                                           token(_self, _self.value) {}
 
-        asset reclaimer_balance;
-        bool nocontributor;
+//     template <typename T>
+//     void cleanTable()
+//     {
+//         T db(_self, _self.value);
+//         while (db.begin() != db.end())
+//         {
+//             auto itr = --db.end();
+//             db.erase(itr);
+//         }
+//     }
 
-        // check if the user is trying to reclaim the system tokens
-        if (sym == getCoreSymbol().code().to_string())
-        {
+//     ACTION clean()
+//     {
+//         require_auth(_self);
+//         cleanTable<Balances>();
+//     }
 
-            auto iterator = balances.find(common::toUUID(dapp));
+//     ACTION cleanreg()
+//     {
+//         require_auth(_self);
+//         cleanTable<Registry>();
+//     }
 
-            if (iterator != balances.end())
-            {
+//     ACTION cleantoken()
+//     {
+//         require_auth(_self);
+//         cleanTable<Token>();
+//     }
 
-                balances.modify(iterator, same_payer, [&](auto &row) {
-                    auto pred = [reclaimer](const contributors &item) {
-                        return item.contributor == reclaimer;
-                    };
-                    auto reclaimer_record = remove_if(std::begin(row.contributors), std::end(row.contributors), pred);
-                    if (reclaimer_record != row.contributors.end())
-                    {
-                        reclaimer_balance = reclaimer_record->balance;
+//     /**********************************************/
+//     /***                                        ***/
+//     /***                Actions                 ***/
+//     /***                                        ***/
+//     /**********************************************/
 
-                        // only erase the contributor row if the cpu and net balances are also 0
-                        if (reclaimer_record->net_balance == asset(0'0000, getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, getCoreSymbol()))
-                        {
-                            row.contributors.erase(reclaimer_record, row.contributors.end());
-                        }
-                        else
-                        {
-                            reclaimer_record->balance -= reclaimer_balance;
-                        }
+//     /***
+//      * Called to specify the following details:
+//      * symbol:              the core token of the chain or the token used to pay for new user accounts of the chain  
+//      * newAccountContract:  the contract to call for new account action 
+//      * minimumram:           minimum bytes of RAM to put in a new account created on the chain 
+//     */
 
-                        row.balance -= reclaimer_balance;
-                    }
-                    else
-                    {
-                        eosio_assert(false, ("no remaining contribution for " + dapp + " by " + reclaimer.to_string()).c_str());
-                    }
+//     ACTION init(const symbol &symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram)
+//     {
+//         require_auth(_self);
 
-                    nocontributor = row.contributors.empty();
-                });
+//         auto iterator = token.find(symbol.raw());
 
-                // delete the entire balance object if no contributors are there for the dapp
-                if (nocontributor && iterator->balance == asset(0'0000, getCoreSymbol()))
-                {
-                    balances.erase(iterator);
-                }
+//         if (iterator == token.end())
+//             token.emplace(_self, [&](auto &row) {
+//                 row.S_SYS = symbol;
+//                 row.newaccountcontract = newaccountcontract;
+//                 row.newaccountaction = newaccountaction;
+//                 row.min_ram = minimumram;
+//             });
+//         else
+//             token.modify(iterator, same_payer, [&](auto &row) {
+//                 row.S_SYS = symbol;
+//                 row.newaccountcontract = newaccountcontract;
+//                 row.newaccountaction = newaccountaction;
+//                 row.min_ram = minimumram;
+//             });
+//     }
 
-                // transfer the remaining balance for the contributor from the createbridge account to contributor's account
-                auto memo = "reimburse the remaining balance to " + reclaimer.to_string();
-                action(
-                    permission_level{_self, "active"_n},
-                    name("eosio.token"),
-                    name("transfer"),
-                    make_tuple(_self, reclaimer, reclaimer_balance, memo))
-                    .send();
-            }
-            else
-            {
-                eosio_assert(false, ("no funds given by " + reclaimer.to_string() + " for " + dapp).c_str());
-            }
-        }
-        // user is trying to reclaim custom dapp tokens
-        else
-        {
-            auto iterator = dapps.find(toUUID(dapp));
-            if (iterator != dapps.end())
-                dapps.modify(iterator, same_payer, [&](auto &row) {
-                    if (row.airdrop->contract != name("") && row.airdrop->tokens.symbol.code().to_string() == sym && row.owner == name(reclaimer))
-                    {
-                        auto memo = "reimburse the remaining airdrop balance for " + dapp + " to " + reclaimer.to_string();
-                        if (row.airdrop->tokens != asset(0'0000, row.airdrop->tokens.symbol))
-                        {
-                            action(
-                                permission_level{_self, "active"_n},
-                                row.airdrop->contract,
-                                name("transfer"),
-                                make_tuple(_self, reclaimer, row.airdrop->tokens, memo))
-                                .send();
-                            row.airdrop->tokens -= row.airdrop->tokens;
-                        }
-                        else
-                        {
-                            eosio_assert(false, ("No remaining airdrop balance for " + dapp + ".").c_str());
-                        }
-                    }
-                    else
-                    {
-                        eosio_assert(false, ("the remaining airdrop balance for " + dapp + " can only be claimed by its owner/whitelisted account.").c_str());
-                    }
-                });
-        }
-    }
+//     /***
+//      * Called to define an account name as the owner of a dapp along with the following details:
+//      * owner:           account name to be registered as the owner of the dapp 
+//      * dapp:            the string/account name representing the dapp
+//      * ram_bytes:       bytes of ram to put in the new user account created for the dapp
+//      * net:             EOS amount to be staked for net
+//      * cpu:             EOS amount to be staked for cpu
+//      * airdropcontract: airdropdata struct/json or null
+//      * Only the owner account/whitelisted account will be able to create new user account for the dapp
+//      */
 
-    // reclaim the balance returned to createbridge for the app after the user's net/cpu resources are unstaked
-    ACTION refundstakes(name & from, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//     ACTION define(name & owner, string dapp, uint64_t ram_bytes, asset net, asset cpu, uint64_t pricekey, airdropdata & airdrop, bool use_rex, rexdata &rex)
+//     {
+//         require_auth(dapp != "free" ? owner : _self);
 
-        stakes::reclaimbwbalances(from, origin);
-    }
+//         auto iterator = dapps.find(toUUID(dapp));
 
-    /**********************************************/
-    /***                                        ***/
-    /***               STAKE                    ***/
-    /***                                        ***/
-    /**********************************************/
+//         eosio_assert(iterator == dapps.end() || (iterator != dapps.end() && iterator->owner == owner),
+//                      ("the dapp " + dapp + " is already registered by another account").c_str());
 
-    ACTION stake(name & from, name & to, string & origin, asset & net, asset & cpu)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//         uint64_t min_ram = getMinimumRAM();
 
-        stakes::stakeCpuOrNet(to, net, cpu);
-        contributions::subCpuOrNetBalance(from.to_string(), origin, net, "net");
-        contributions::subCpuOrNetBalance(from.to_string(), origin, cpu, "cpu");
-    }
+//         eosio_assert(ram_bytes >= min_ram, ("ram for new accounts must be equal to or greater than " + to_string(min_ram) + " bytes.").c_str());
 
-    ACTION unstake(name & from, name & to, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//         // Creating a new dapp reference
+//         if (iterator == dapps.end())
+//             dapps.emplace(_self, [&](auto &row) {
+//                 row.owner = owner;
+//                 row.dapp = dapp;
+//                 row.pricekey = pricekey;
+//                 row.ram_bytes = ram_bytes;
+//                 row.net = net;
+//                 row.cpu = cpu;
+//                 row.airdrop = airdrop;
+//                 row.use_rex = use_rex;
+//                 row.rex = rex;
+//             });
 
-        stakes::unstakeCpuOrNet(from, to, origin);
-    }
+//         // Updating an existing dapp reference's configurations
+//         else
+//             dapps.modify(iterator, same_payer, [&](auto &row) {
+//                 row.ram_bytes = ram_bytes;
+//                 row.pricekey = pricekey;
+//                 row.net = net;
+//                 row.cpu = cpu;
+//                 row.airdrop = airdrop;
+//                 row.use_rex = use_rex;
+//                 row.rex = rex;
+//             });
+//     }
 
-    ACTION unstakenet(name & from, name & to, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//     /***
+//      * Lets the owner account of the dapp to whitelist other accounts. 
+//      */
+//     ACTION whitelist(name owner, name account, string dapp)
+//     {
+//         require_auth(owner);
 
-        // only unstake for net
-        stakes::unstakeCpuOrNet(from, to, origin, true, false);
-    }
+//         auto iterator = dapps.find(toUUID(dapp));
 
-    ACTION unstakecpu(name & from, name & to, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//         if (iterator != dapps.end() && owner == iterator->owner)
+//             dapps.modify(iterator, same_payer, [&](auto &row) {
+//                 if (std::find(row.custodians.begin(), row.custodians.end(), account) == row.custodians.end())
+//                 {
+//                     row.custodians.push_back(account);
+//                 }
+//             });
 
-        // only unstake for cpu
-        stakes::unstakeCpuOrNet(from, to, origin, false, true);
-    }
+//         else
+//             eosio_assert(false, ("the dapp " + dapp + " is not owned by account " + owner.to_string()).c_str());
+//     }
 
-    /**********************************************/
-    /***                                        ***/
-    /***               REX                    ***/
-    /***                                        ***/
-    /**********************************************/
+//     /***
+//      * Creates a new user account. 
+//      * It also airdrops custom dapp tokens to the new user account if a dapp owner has opted for airdrops
+//      * memo:                name of the account paying for the balance left after getting the donation from the dapp contributors 
+//      * account:             name of the account to be created
+//      * ownerkey,activekey:  key pair for the new account  
+//      * origin:              the string representing the dapp to create the new user account for. For ex- everipedia.org, lumeos
+//      * For new user accounts, it follows the following steps:
+//      * 1. Choose a contributor, if any, for the dapp to fund the cost for new account creation
+//      * 2. Check if the contributor is funding 100 %. If not, check if the "memo" account has enough to fund the remaining cost of account creation
+//     */
+//     ACTION create(string & memo, name & account, public_key & ownerkey, public_key & activekey, string & origin, name referral)
+//     {
+//         auto iterator = dapps.find(toUUID(origin));
 
-    // finds the existing net loan from createbridge to user account and funds it
-    ACTION fundnetloan(name & from, name & to, asset quantity, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//         // Only owner/whitelisted account for the dapp can create accounts
+//         if (iterator != dapps.end())
+//         {
+//             if (name(memo) == iterator->owner)
+//                 require_auth(iterator->owner);
+//             else if (checkIfWhitelisted(name(memo), origin))
+//                 require_auth(name(memo));
+//             else if (origin == "free")
+//                 print("using globally available free funds to create account");
+//             else
+//                 eosio_assert(false, ("only owner or whitelisted accounts can create new user accounts for " + origin).c_str());
+//         }
+//         else
+//         {
+//             eosio_assert(false, ("no owner account found for " + origin).c_str());
+//         }
 
-        fundloan(to, quantity, origin, "net");
-        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
-    }
+//         authority owner{.threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {}};
+//         authority active{.threshold = 1, .keys = {key_weight{activekey, 1}}, .accounts = {}, .waits = {}};
+//         createJointAccount(memo, account, origin, owner, active, referral);
+//     }
 
-    // finds the existing cpu loan from createbridge to user account and funds it
-    ACTION fundcpuloan(name & from, name & to, asset quantity, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//     /**********************************************/
+//     /***                                        ***/
+//     /***               RECLAIMS                 ***/
+//     /***                                        ***/
+//     /**********************************************/
 
-        fundloan(to, quantity, origin, "cpu");
-        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
-    }
+//     /***
+//      * Transfers the remaining balance of a contributor from createbridge back to the contributor
+//      * reclaimer: account trying to reclaim the balance
+//      * dapp:      the dapp name for which the account is trying to reclaim the balance
+//      * sym:       symbol of the tokens to be reclaimed. It can have value based on the following scenarios:
+//      *            - reclaim the "native" token balance used to create accounts. For ex - EOS/SYS
+//      *            - reclaim the remaining airdrop token balance used to airdrop dapp tokens to new user accounts. For ex- IQ/LUM
+//      */
+//     ACTION reclaim(name reclaimer, string dapp, string sym)
+//     {
+//         require_auth(reclaimer);
 
-    // creates a new loan from createbridge to the user acount (to)
-    ACTION rentnet(name & from, name & to, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//         asset reclaimer_balance;
+//         bool nocontributor;
 
-        auto iterator = dapps.find(common::toUUID(origin));
+//         // check if the user is trying to reclaim the system tokens
+//         if (sym == getCoreSymbol().code().to_string())
+//         {
 
-        rex::rentnet(origin, to);
+//             auto iterator = balances.find(common::toUUID(dapp));
 
-        asset quantity = iterator->rex->net_loan_payment + iterator->rex->net_loan_fund;
-        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
-    }
+//             if (iterator != balances.end())
+//             {
 
-    // creates a new loan from createbridge to the user acount (to)
-    ACTION rentcpu(name & from, name & to, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//                 balances.modify(iterator, same_payer, [&](auto &row) {
+//                     auto pred = [reclaimer](const contributors &item) {
+//                         return item.contributor == reclaimer;
+//                     };
+//                     auto reclaimer_record = remove_if(std::begin(row.contributors), std::end(row.contributors), pred);
+//                     if (reclaimer_record != row.contributors.end())
+//                     {
+//                         reclaimer_balance = reclaimer_record->balance;
 
-        auto iterator = dapps.find(common::toUUID(origin));
+//                         // only erase the contributor row if the cpu and net balances are also 0
+//                         if (reclaimer_record->net_balance == asset(0'0000, getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, getCoreSymbol()))
+//                         {
+//                             row.contributors.erase(reclaimer_record, row.contributors.end());
+//                         }
+//                         else
+//                         {
+//                             reclaimer_record->balance -= reclaimer_balance;
+//                         }
 
-        rex::rentcpu(origin, to);
+//                         row.balance -= reclaimer_balance;
+//                     }
+//                     else
+//                     {
+//                         eosio_assert(false, ("no remaining contribution for " + dapp + " by " + reclaimer.to_string()).c_str());
+//                     }
 
-        asset quantity = iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund;
-        contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
-    }
+//                     nocontributor = row.contributors.empty();
+//                 });
 
-    // topup existing loan balance (cpu & net) for a user up to the given quantity
-    // If no existing loan, then create a new loan
-    ACTION topuploans(name & from, name & to, asset & cpuquantity, asset & netquantity, string & origin)
-    {
-        checkIfOwnerOrWhitelisted(from, origin);
+//                 // delete the entire balance object if no contributors are there for the dapp
+//                 if (nocontributor && iterator->balance == asset(0'0000, getCoreSymbol()))
+//                 {
+//                     balances.erase(iterator);
+//                 }
 
-        asset required_net_bal, required_cpu_bal;
-        tie(required_net_bal, required_cpu_bal) = rex::topup(to, cpuquantity, netquantity, origin);
+//                 // transfer the remaining balance for the contributor from the createbridge account to contributor's account
+//                 auto memo = "reimburse the remaining balance to " + reclaimer.to_string();
+//                 action(
+//                     permission_level{_self, "active"_n},
+//                     name("eosio.token"),
+//                     name("transfer"),
+//                     make_tuple(_self, reclaimer, reclaimer_balance, memo))
+//                     .send();
+//             }
+//             else
+//             {
+//                 eosio_assert(false, ("no funds given by " + reclaimer.to_string() + " for " + dapp).c_str());
+//             }
+//         }
+//         // user is trying to reclaim custom dapp tokens
+//         else
+//         {
+//             auto iterator = dapps.find(toUUID(dapp));
+//             if (iterator != dapps.end())
+//                 dapps.modify(iterator, same_payer, [&](auto &row) {
+//                     if (row.airdrop->contract != name("") && row.airdrop->tokens.symbol.code().to_string() == sym && row.owner == name(reclaimer))
+//                     {
+//                         auto memo = "reimburse the remaining airdrop balance for " + dapp + " to " + reclaimer.to_string();
+//                         if (row.airdrop->tokens != asset(0'0000, row.airdrop->tokens.symbol))
+//                         {
+//                             action(
+//                                 permission_level{_self, "active"_n},
+//                                 row.airdrop->contract,
+//                                 name("transfer"),
+//                                 make_tuple(_self, reclaimer, row.airdrop->tokens, memo))
+//                                 .send();
+//                             row.airdrop->tokens -= row.airdrop->tokens;
+//                         }
+//                         else
+//                         {
+//                             eosio_assert(false, ("No remaining airdrop balance for " + dapp + ".").c_str());
+//                         }
+//                     }
+//                     else
+//                     {
+//                         eosio_assert(false, ("the remaining airdrop balance for " + dapp + " can only be claimed by its owner/whitelisted account.").c_str());
+//                     }
+//                 });
+//         }
+//     }
 
-        contributions::subCpuOrNetBalance(from.to_string(), origin, required_net_bal, "net");
-        contributions::subCpuOrNetBalance(from.to_string(), origin, required_cpu_bal, "cpu");
-    }
+//     // reclaim the balance returned to createbridge for the app after the user's net/cpu resources are unstaked
+//     ACTION refundstakes(name & from, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
 
-    // to check if createbridge is deployed and functioning
-    ACTION ping(name & from){
-        print('ping');
-    }
+//         stakes::reclaimbwbalances(from, origin);
+//     }
 
-    /**********************************************/
-    /***                                        ***/
-    /***               Transfers                ***/
-    /***                                        ***/
-    /**********************************************/
+//     /**********************************************/
+//     /***                                        ***/
+//     /***               STAKE                    ***/
+//     /***                                        ***/
+//     /**********************************************/
 
-    void transfer(const name &from, const name &to, const asset &quantity, string &memo)
-    {
-        if (to != _self)
-            return;
-        if (from == name("eosio.stake"))
-        {
-            return addTotalUnstaked(quantity);
-        };
+//     ACTION stake(name & from, name & to, string & origin, asset & net, asset & cpu)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
 
-        if (quantity.symbol != getCoreSymbol())
-            return;
-        if (memo.length() > 64)
-            return;
-        addBalance(from, quantity, memo);
-    }
-};
+//         stakes::stakeCpuOrNet(to, net, cpu);
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, net, "net");
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, cpu, "cpu");
+//     }
 
-extern "C"
-{
-    void apply(uint64_t receiver, uint64_t code, uint64_t action)
-    {
-        auto self = receiver;
+//     ACTION unstake(name & from, name & to, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
 
-        if (code == self)
-            switch (action)
-            {
-                EOSIO_DISPATCH_HELPER(createescrow, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans)(ping))
-            }
+//         stakes::unstakeCpuOrNet(from, to, origin);
+//     }
 
-        else
-        {
-            if (code == name("eosio.token").value && action == name("transfer").value)
-            {
-                execute_action(name(receiver), name(code), &createescrow::transfer);
-            }
-        }
-    }
-};
+//     ACTION unstakenet(name & from, name & to, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         // only unstake for net
+//         stakes::unstakeCpuOrNet(from, to, origin, true, false);
+//     }
+
+//     ACTION unstakecpu(name & from, name & to, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         // only unstake for cpu
+//         stakes::unstakeCpuOrNet(from, to, origin, false, true);
+//     }
+
+//     /**********************************************/
+//     /***                                        ***/
+//     /***               REX                    ***/
+//     /***                                        ***/
+//     /**********************************************/
+
+//     // finds the existing net loan from createbridge to user account and funds it
+//     ACTION fundnetloan(name & from, name & to, asset quantity, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         fundloan(to, quantity, origin, "net");
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
+//     }
+
+//     // finds the existing cpu loan from createbridge to user account and funds it
+//     ACTION fundcpuloan(name & from, name & to, asset quantity, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         fundloan(to, quantity, origin, "cpu");
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
+//     }
+
+//     // creates a new loan from createbridge to the user acount (to)
+//     ACTION rentnet(name & from, name & to, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         auto iterator = dapps.find(common::toUUID(origin));
+
+//         rex::rentnet(origin, to);
+
+//         asset quantity = iterator->rex->net_loan_payment + iterator->rex->net_loan_fund;
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
+//     }
+
+//     // creates a new loan from createbridge to the user acount (to)
+//     ACTION rentcpu(name & from, name & to, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         auto iterator = dapps.find(common::toUUID(origin));
+
+//         rex::rentcpu(origin, to);
+
+//         asset quantity = iterator->rex->cpu_loan_payment + iterator->rex->cpu_loan_fund;
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
+//     }
+
+//     // topup existing loan balance (cpu & net) for a user up to the given quantity
+//     // If no existing loan, then create a new loan
+//     ACTION topuploans(name & from, name & to, asset & cpuquantity, asset & netquantity, string & origin)
+//     {
+//         checkIfOwnerOrWhitelisted(from, origin);
+
+//         asset required_net_bal, required_cpu_bal;
+//         tie(required_net_bal, required_cpu_bal) = rex::topup(to, cpuquantity, netquantity, origin);
+
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, required_net_bal, "net");
+//         contributions::subCpuOrNetBalance(from.to_string(), origin, required_cpu_bal, "cpu");
+//     }
+
+//     // to check if createbridge is deployed and functioning
+//     ACTION ping(name & from){
+//         print('ping');
+//     }
+
+//     /**********************************************/
+//     /***                                        ***/
+//     /***               Transfers                ***/
+//     /***                                        ***/
+//     /**********************************************/
+
+//     void transfer(const name &from, const name &to, const asset &quantity, string &memo)
+//     {
+//         if (to != _self)
+//             return;
+//         if (from == name("eosio.stake"))
+//         {
+//             return addTotalUnstaked(quantity);
+//         };
+
+//         if (quantity.symbol != getCoreSymbol())
+//             return;
+//         if (memo.length() > 64)
+//             return;
+//         addBalance(from, quantity, memo);
+//     }
+// };
+
+// extern "C"
+// {
+//     void apply(uint64_t receiver, uint64_t code, uint64_t action)
+//     {
+//         auto self = receiver;
+
+//         if (code == self)
+//             switch (action)
+//             {
+//                 EOSIO_DISPATCH_HELPER(createescrow, (init)(clean)(cleanreg)(cleantoken)(create)(define)(whitelist)(reclaim)(refundstakes)(unstake)(unstakenet)(unstakecpu)(fundnetloan)(fundcpuloan)(rentnet)(rentcpu)(topuploans)(ping))
+//             }
+
+//         else
+//         {
+//             if (code == name("eosio.token").value && action == name("transfer").value)
+//             {
+//                 execute_action(name(receiver), name(code), &createescrow::transfer);
+//             }
+//         }
+//     }
+// };

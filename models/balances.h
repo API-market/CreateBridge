@@ -1,6 +1,6 @@
 #pragma once
 
-namespace balances
+namespace balance
 {
 
 struct [[ eosio::table, eosio::contract("createescrow") ]] contributors
