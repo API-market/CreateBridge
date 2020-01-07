@@ -35,6 +35,15 @@ namespace createescrow {
     create_escrow( name s, name code, datastream<const char*> ds );
 
     [[eosio::action]]
+    void clean();
+
+    [[eosio::action]]
+    void cleanreg();
+
+    [[eosio::action]]
+    void cleantoken();
+
+    [[eosio::action]]
     void init(const symbol &symbol, name newaccountcontract, name newaccountaction, uint64_t minimumram); 
    
     [[eosio::action]]
@@ -81,6 +90,8 @@ namespace createescrow {
 
     [[eosio::action]]
     void ping(name & from);
+
+    void transfer(const name &from, const name &to, const asset &quantity, string &memo);
 
 /***
 * Checks if an account is whitelisted for a dapp by the owner of the dapp
@@ -142,6 +153,18 @@ void checkIfOwnerOrWhitelisted(name account, string origin)
 
 
   private:
+
+    template <typename T>
+    void cleanTable()
+    {
+        T db(_self, _self.value);
+        while (db.begin() != db.end())
+        {
+            auto itr = --db.end();
+            db.erase(itr);
+        }
+    }
+
     void airdrop(string dapp, name account);
     asset balanceFor(string &memo);
     bool hasBalance(string memo, const asset &quantity);
@@ -177,27 +200,6 @@ void checkIfOwnerOrWhitelisted(name account, string origin)
     asset getFixedNet(uint64_t priceKey);
     auto getCpuLoanRecord(name account);
     auto getNetLoanRecord(name account);
-  };
+};
 }
 
-// extern "C"
-// {
-//     void apply(uint64_t receiver, uint64_t code, uint64_t action)
-//     {
-//         auto self = receiver;
-
-//         if (code == self)
-//             switch (action)
-//             {
-//                 EOSIO_DISPATCH_HELPER(createescrow, (createescrow::create_escrow::init)(createescrow::create_escrow::clean)(createescrow::create_escrow::cleanreg)(createescrow::create_escrow::cleantoken)(createescrow::create_escrow::create)(createescrow::create_escrow::define)(createescrow::create_escrow::whitelist)(createescrow::create_escrow::reclaim)(createescrow::create_escrow::refundstakes)(createescrow::create_escrow::unstake)(createescrow::create_escrow::unstakenet)(createescrow::create_escrow::unstakecpu)(createescrow::create_escrow::fundnetloan)(createescrow::create_escrow::fundcpuloan)(createescrow::create_escrow::rentnet)(createescrow::create_escrow::rentcpu)(createescrow::create_escrow::topuploans)(createescrow::create_escrow::ping))
-//             }
-
-//         else
-//         {
-//             if (code == name("eosio.token").value && action == name("transfer").value)
-//             {
-//                 execute_action(name(receiver), name(code), &createescrow::create_escrow::transfer);
-//             }
-//         }
-//     }
-// };
