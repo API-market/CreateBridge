@@ -14,7 +14,7 @@ source ~/.bash_aliases
 CHAIN_SYMBOL=${1:-EOS}
 SYMBOL_PRECISION=${2:-4}
 NEWACCOUNT_CONTRACT=${3:-eosio}
-NEWACCOUNT_ACTION=${4:-createoreacc}
+NEWACCOUNT_ACTION=${4:-newaccount}
 MINIMUM_RAM=${5:-4096}
 
 # specify the chain symbol and the contract name to call for new account action 

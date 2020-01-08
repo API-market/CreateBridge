@@ -14,28 +14,23 @@ cleos="cleos -u $eosnode"
 CHAIN_SYMBOL=${1:-EOS}
 NAME=${2:-mydappuser11}
 ORIGIN=${3:-mydapp.org}
-TOKEN_CONTRACT=${4:-mydapptoken1}
-TOKEN_SYMBOL=${5:-DP}
-DAPP_OWNER=${6:-mydappowner1}
-MEMO=${7:-contributor1}
+DAPP_OWNER=${6:-oreidfunding}
+CREATOR=${7:-contributor1}
 
 # app registration
-AIRDROP_JSON='{"contract":"'$TOKEN_CONTRACT'", "tokens":"1000.0000 '$CHAIN_SYMBOL'", "limit":"10.0000 '$CHAIN_SYMBOL'"}'
-PARAMS_JSON='{"owner":"'$DAPP_OWNER'", "dapp":"'$ORIGIN'", "ram_bytes":"4096", "net":"1.0000 '$CHAIN_SYMBOL'", "cpu":"1.0000 '$CHAIN_SYMBOL'", "airdrop":'$AIRDROP_JSON'}'
-$cleos push action createbridge define "$PARAMS_JSON" -p $DAPP_OWNER
+AIRDROP_JSON='{"contract":"", "tokens":"0 EOS", "limit":"0 EOS"}'
+REX_JSON='{"net_loan_payment":"0.0000 EOS","net_loan_fund":"0.0000 EOS","cpu_loan_payment":"0.0000 EOS","cpu_loan_fund":"0.0000 EOS"}'
+PARAMS_JSON='{"owner":"'$DAPP_OWNER'", "dapp":"'$ORIGIN'", "ram_bytes":"4096", "net":"1.0000 '$CHAIN_SYMBOL'", "cpu":"1.0000 '$CHAIN_SYMBOL'", "airdrop":'$AIRDROP_JSON', "use_rex": false, "rex":'$REX_JSON'}'
+$cleos push action createescrow define "$PARAMS_JSON" -p $DAPP_OWNER
 
 # whitelisting
-$cleos push action createbridge whitelist '["'$DAPP_OWNER'","'$MEMO'","'$ORIGIN'"]' -p $DAPP_OWNER
-
-# transfer airdrop amount
-$cleos push action $TOKEN_CONTRACT transfer '["'$DAPP_OWNER'","createbridge","1000.0000 '$TOKEN_SYMBOL'","transfer"]' -p $DAPP_OWNER
+$cleos push action createescrow whitelist '["'$DAPP_OWNER'","'$CREATOR'","'$ORIGIN'"]' -p $DAPP_OWNER
 
 # contributions
-$cleos transfer $DAPP_OWNER createbridge "100.0000 $CHAIN_SYMBOL" "$ORIGIN,50,100" -p $DAPP_OWNER
-$cleos transfer $MEMO createbridge "100.0000 $CHAIN_SYMBOL" "$ORIGIN,50,100" -p $MEMO
+$cleos transfer $DAPP_OWNER createescrow "100.0000 $CHAIN_SYMBOL" "$ORIGIN,50,100,0000,0000" -p $CREATOR
 
 # create account
-$cleos push action createbridge create '["'$MEMO'","'$NAME'","EOS4xJvy2tYU21reKbbq4RPLxgzxNmrLtidVWpio5Ggwisfkgzg2L","EOS4xJvy2tYU21reKbbq4RPLxgzxNmrLtidVWpio5Ggwisfkgzg2L","'$ORIGIN'"]' -p $MEMO
+$cleos push action createescrow create '["'$CREATOR'","'$NAME'","EOS4xJvy2tYU21reKbbq4RPLxgzxNmrLtidVWpio5Ggwisfkgzg2L","EOS4xJvy2tYU21reKbbq4RPLxgzxNmrLtidVWpio5Ggwisfkgzg2L","'$ORIGIN'","'$CREATOR'"]' -p $CREATOR
 
 # get newly created account
 $cleos get account $NAME

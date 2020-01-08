@@ -10,7 +10,7 @@ eosnode=http://127.0.0.1:8888
 cleos="cleos -u $eosnode"
 
 ORIGIN=${1:-mydapp.org}
-CONTRIBUTOR=${2:-contributor1}
+CONTRIBUTOR=${2:-oreidfunding}
 CHAIN_SYMBOL=${3:-EOS}
 
 # contributions
