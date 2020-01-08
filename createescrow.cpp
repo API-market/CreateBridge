@@ -182,7 +182,7 @@ void create_escrow::reclaim(name reclaimer, string dapp, string sym)
                     reclaimer_balance = reclaimer_record->balance;
 
                     // only erase the contributor row if the cpu and net balances are also 0
-                    if (reclaimer_record->net_balance == asset(0'0000, getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, getCoreSymbol()))
+                    if (reclaimer_record->net_balance == asset(0'0000, create_escrow::getCoreSymbol()) && reclaimer_record->cpu_balance == asset(0'0000, create_escrow::getCoreSymbol()))
                     {
                         row.contributors.erase(reclaimer_record, row.contributors.end());
                     }
@@ -202,13 +202,17 @@ void create_escrow::reclaim(name reclaimer, string dapp, string sym)
             });
 
             // delete the entire balance object if no contributors are there for the dapp
-            if (nocontributor && iterator->balance == asset(0'0000, getCoreSymbol()))
+            if (nocontributor && iterator->balance == asset(0'0000, create_escrow::getCoreSymbol()))
             {
                 balances.erase(iterator);
             }
 
+            auto msg = reclaimer_balance.to_string() + " reclaimed by " + reclaimer.to_string() + " for " + dapp;
+            print(msg.c_str());
+
             // transfer the remaining balance for the contributor from the createescrow account to contributor's account
             auto memo = "reimburse the remaining balance to " + reclaimer.to_string();
+
             action(
                 permission_level{_self, "active"_n},
                 name("eosio.token"),
@@ -268,7 +272,7 @@ void create_escrow::transfer(const name &from, const name &to, const asset &quan
         return create_escrow::addTotalUnstaked(quantity);
     };
 
-    if (quantity.symbol != getCoreSymbol())
+    if (quantity.symbol != create_escrow::getCoreSymbol())
         return;
     if (memo.length() > 64)
         return;
