@@ -7,7 +7,7 @@
 
 namespace createescrow
 {
-// finds the existing net loan from createbridge to user account and funds it
+// finds the existing net loan from createescrow to user account and funds it
 void create_escrow::fundnetloan(name &from, name &to, asset quantity, string &origin)
 {
     create_escrow::checkIfOwnerOrWhitelisted(from, origin);
@@ -16,7 +16,7 @@ void create_escrow::fundnetloan(name &from, name &to, asset quantity, string &or
     create_escrow::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
 }
 
-// finds the existing cpu loan from createbridge to user account and funds it
+// finds the existing cpu loan from createescrow to user account and funds it
 void create_escrow::fundcpuloan(name &from, name &to, asset quantity, string &origin)
 {
     create_escrow::checkIfOwnerOrWhitelisted(from, origin);
@@ -25,7 +25,7 @@ void create_escrow::fundcpuloan(name &from, name &to, asset quantity, string &or
     create_escrow::subCpuOrNetBalance(from.to_string(), origin, quantity, "cpu");
 }
 
-// creates a new loan from createbridge to the user acount (to)
+// creates a new loan from createescrow to the user acount (to)
 void create_escrow::rentnet(name &from, name &to, string &origin)
 {
     create_escrow::checkIfOwnerOrWhitelisted(from, origin);
@@ -38,7 +38,7 @@ void create_escrow::rentnet(name &from, name &to, string &origin)
     create_escrow::subCpuOrNetBalance(from.to_string(), origin, quantity, "net");
 }
 
-// creates a new loan from createbridge to the user acount (to)
+// creates a new loan from createescrow to the user acount (to)
 void create_escrow::rentcpu(name &from, name &to, string &origin)
 {
     create_escrow::checkIfOwnerOrWhitelisted(from, origin);

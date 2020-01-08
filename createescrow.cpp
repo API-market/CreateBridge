@@ -149,7 +149,7 @@ void create_escrow::whitelist(name owner, name account, string dapp)
 }
 
 /***
-     * Transfers the remaining balance of a contributor from createbridge back to the contributor
+     * Transfers the remaining balance of a contributor from createescrow back to the contributor
      * reclaimer: account trying to reclaim the balance
      * dapp:      the dapp name for which the account is trying to reclaim the balance
      * sym:       symbol of the tokens to be reclaimed. It can have value based on the following scenarios:
@@ -207,7 +207,7 @@ void create_escrow::reclaim(name reclaimer, string dapp, string sym)
                 balances.erase(iterator);
             }
 
-            // transfer the remaining balance for the contributor from the createbridge account to contributor's account
+            // transfer the remaining balance for the contributor from the createescrow account to contributor's account
             auto memo = "reimburse the remaining balance to " + reclaimer.to_string();
             action(
                 permission_level{_self, "active"_n},
@@ -253,7 +253,7 @@ void create_escrow::reclaim(name reclaimer, string dapp, string sym)
     }
 }
 
-// to check if createbridge is deployed and functioning
+// to check if createescrow is deployed and functioning
 void create_escrow::ping(name &from)
 {
     print('ping');

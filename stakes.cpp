@@ -47,7 +47,7 @@ void create_escrow::unstakecpu(name &from, name &to, string &origin)
     create_escrow::unstakeCpuOrNet(from, to, origin, false, true);
 }
 
-// // reclaim the balance returned to createbridge for the app after the user's net/cpu resources are unstaked
+// // reclaim the balance returned to createescrow for the app after the user's net/cpu resources are unstaked
 void create_escrow::refundstakes(name &from, string &origin)
 {
     create_escrow::checkIfOwnerOrWhitelisted(from, origin);
