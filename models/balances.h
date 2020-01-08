@@ -32,4 +32,4 @@ struct [[ eosio::table, eosio::contract("createescrow") ]] balances
 };
 
 typedef eosio::multi_index<"balances"_n, balances> Balances;
-} // namespace balances
+} // namespace balance

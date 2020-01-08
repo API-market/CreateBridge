@@ -6,7 +6,8 @@
 
 #include "createescrow.hpp"
 
-namespace createescrow {
+namespace createescrow
+{
 
 using namespace eosio;
 using std::string;
@@ -130,4 +131,4 @@ auto create_escrow::getNetLoanRecord(name account)
 
     eosio_assert(false, ("No existing loan found for" + account.to_string()).c_str());
 }
-}
+} // namespace createescrow
