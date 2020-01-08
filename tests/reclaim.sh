@@ -14,7 +14,7 @@ CONTRIBUTOR=${2:-oreidfunding}
 CHAIN_SYMBOL=${3:-EOS}
 
 # contributions
-$cleos transfer $CONTRIBUTOR createbridge "5.0000 $CHAIN_SYMBOL" "$ORIGIN,50,100" -p $CONTRIBUTOR
+$cleos transfer $CONTRIBUTOR createescrow "5.0000 $CHAIN_SYMBOL" "$ORIGIN,50,100" -p $CONTRIBUTOR
 
 # reclaim
-$cleos push action createbridge reclaim '["'$CONTRIBUTOR'","'$ORIGIN'","'$CHAIN_SYMBOL'"]' -p $CONTRIBUTOR
+$cleos push action createescrow reclaim '["'$CONTRIBUTOR'","'$ORIGIN'","'$CHAIN_SYMBOL'"]' -p $CONTRIBUTOR
