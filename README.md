@@ -120,3 +120,6 @@ cleos push action createescrow set '["EOS","eosio"]' -p createescrow
 ```
 
 Also checkout the detailed steps in the scripts directory and end to end functionalities in test directory.
+
+## Deploy createescrow
+Run scipts/deploy.sh to deploy createescrow on EOS jungle, kylin, mainnet and ORE chain networks.
