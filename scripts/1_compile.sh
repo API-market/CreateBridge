@@ -9,9 +9,9 @@ source ~/.bash_aliases
 # - 2. OUTPUT_DIR: The output directory for the ABI and WASM files
 # - 3. CONTRACT_ACCOUNT: The name of the contract account to set the contract to
 
-CONTRACT_NAME=${1:-createbridge}
+CONTRACT_NAME=${1:-createescrow}
 OUTPUT_DIR=${2:-../build}
-CONTRACT_ACCOUNT=${3:-createbridge}
+CONTRACT_ACCOUNT=${3:-createescrow}
 
 echo ${CONTRACT_NAME}
 echo ${OUTPUT_DIR}
@@ -20,7 +20,4 @@ echo ${CONTRACT_ACCOUNT}
 eosio-cpp --abigen --contract=${CONTRACT_NAME} ../${CONTRACT_NAME}.cpp -o ${OUTPUT_DIR}/${CONTRACT_NAME}.wasm
 eosio-wasm2wast ../${CONTRACT_NAME}.wasm -o ../${CONTRACT_NAME}.wast
 
-# makes contract eosjs1 compatible
-#sed -i 's/1.1/1.0/g' ${OUTPUT_DIR}/${CONTRACT_NAME}.abi
-
-#cleos set contract ${CONTRACT_ACCOUNT} ${OUTPUT_DIR}/ ${CONTRACT_NAME}.wasm ${CONTRACT_NAME}.abi -p ${CONTRACT_ACCOUNT}@active
+cleos set contract ${CONTRACT_ACCOUNT} ${OUTPUT_DIR}/ ${CONTRACT_NAME}.wasm ${CONTRACT_NAME}.abi -p ${CONTRACT_ACCOUNT}@active
