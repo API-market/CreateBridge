@@ -1,8 +1,9 @@
 #pragma once
 
-#include <eosiolib/eosio.hpp>
-#include <eosiolib/print.hpp>
-#include <eosiolib/action.hpp>
+#include <eosio/eosio.hpp>
+#include <eosio/print.hpp>
+#include <eosio/action.hpp>
+#include <eosio/crypto.hpp>
 
 #include "lib/common.h"
 

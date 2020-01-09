@@ -1,8 +1,4 @@
-#include <eosiolib/eosio.hpp>
-#include <eosiolib/print.hpp>
-#include <eosiolib/action.hpp>
-#include <eosiolib/crypto.h>
-
+#include <eosio/action.hpp>
 #include "createescrow.hpp"
 
 #include "lib/common.h"
@@ -159,13 +155,13 @@ void create_escrow::reclaimbwbalances(name from, string dapp)
 
     if (iterator == total_reclaim.end())
     {
-        eosio_assert(false, "Unstaking is still in progress. No balance available to be reclaimed");
+        check(false, "Unstaking is still in progress. No balance available to be reclaimed");
     }
 
     if (itr == total_unstaked.end())
     {
         auto msg = ("No balance left to reclaim for " + dapp + " by " + from.to_string()).c_str();
-        eosio_assert(false, msg);
+        check(false, msg);
     }
     else
     {

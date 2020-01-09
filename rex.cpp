@@ -82,7 +82,7 @@ void create_escrow::rentrexnet(string dapp, name account)
             }
             else
             {
-                eosio_assert(row.use_rex, ("Rex not enabled for" + dapp).c_str());
+                check(row.use_rex, ("Rex not enabled for" + dapp).c_str());
             }
         });
 }
@@ -105,7 +105,7 @@ void create_escrow::rentrexcpu(string dapp, name account)
             }
             else
             {
-                eosio_assert(row.use_rex, ("Rex not enabled for" + dapp).c_str());
+                check(row.use_rex, ("Rex not enabled for" + dapp).c_str());
             }
         });
 }
@@ -115,7 +115,7 @@ void create_escrow::fundloan(name to, asset quantity, string dapp, string type)
     registry::Registry dapps(_self, _self.value);
     auto iterator = dapps.find(common::toUUID(dapp));
 
-    eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
+    check(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
 
     if (type == "net")
     {
@@ -150,7 +150,7 @@ std::tuple<asset, asset> create_escrow::rextopup(name to, asset cpuquantity, ass
     registry::Registry dapps(_self, _self.value);
     auto iterator = dapps.find(common::toUUID(dapp));
 
-    eosio_assert(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
+    check(iterator->use_rex, ("Rex not enabled for" + dapp).c_str());
 
     auto net_loan_record = create_escrow::getNetLoanRecord(to);
     auto cpu_loan_record = create_escrow::getCpuLoanRecord(to);

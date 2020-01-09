@@ -31,7 +31,7 @@ void create_escrow::airdrop(string dapp, name account)
                 }
                 else
                 {
-                    eosio_assert(false, ("Not enough " + row.airdrop->tokens.symbol.code().to_string() + " with createescrow to airdrop.").c_str());
+                    check(false, ("Not enough " + row.airdrop->tokens.symbol.code().to_string() + " with createescrow to airdrop.").c_str());
                 }
             }
         });

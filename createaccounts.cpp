@@ -1,5 +1,3 @@
-#include <eosiolib/eosio.hpp>
-
 #include "createescrow.hpp"
 
 #include "lib/common.h"
@@ -44,11 +42,11 @@ void create_escrow::create(string &memo, name &account, public_key &ownerkey, pu
         else if (origin == "free")
             print("using globally available free funds to create account");
         else
-            eosio_assert(false, ("only owner or whitelisted accounts can create new user accounts for " + origin).c_str());
+            check(false, ("only owner or whitelisted accounts can create new user accounts for " + origin).c_str());
     }
     else
     {
-        eosio_assert(false, ("no owner account found for " + origin).c_str());
+        check(false, ("no owner account found for " + origin).c_str());
     }
 
     authority owner{.threshold = 1, .keys = {key_weight{ownerkey, 1}}, .accounts = {}, .waits = {}};
@@ -121,7 +119,7 @@ void create_escrow::createJointAccount(string &memo, name &account, string &orig
 
         if (cpu > cpu_balance || net > net_balance)
         {
-            eosio_assert(false, ("Not enough cpu or net balance in " + memo + "for " + origin + " to pay for account's bandwidth.").c_str());
+            check(false, ("Not enough cpu or net balance in " + memo + "for " + origin + " to pay for account's bandwidth.").c_str());
         }
 
         if (useOwnerNetBalance)
@@ -179,7 +177,7 @@ void create_escrow::createJointAccount(string &memo, name &account, string &orig
         // if the "memo" account doesn't have enough fund, check globally available "free" pool
         if (balance < requiredBalance)
         {
-            eosio_assert(false, ("Not enough balance in " + memo + " or donated by the contributors for " + origin + " to pay for account creation.").c_str());
+            check(false, ("Not enough balance in " + memo + " or donated by the contributors for " + origin + " to pay for account creation.").c_str());
         }
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <eosiolib/eosio.hpp>
-#include <eosiolib/asset.hpp>
+#include <eosio/eosio.hpp>
+#include <eosio/asset.hpp>
 #include <eosio/time.hpp>
 
 using namespace eosio;
