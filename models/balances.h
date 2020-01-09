@@ -1,7 +1,9 @@
 #pragma once
+#include <eosio/system.hpp>
 
 namespace balance
 {
+using namespace eosio;
 
 struct [[ eosio::table, eosio::contract("createescrow") ]] contributors
 {
