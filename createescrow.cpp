@@ -90,7 +90,7 @@ void create_escrow::define(name &owner, string dapp, uint64_t ram_bytes, asset n
     auto iterator = dapps.find(toUUID(dapp));
 
     check(iterator == dapps.end() || (iterator != dapps.end() && iterator->owner == owner),
-                 ("the dapp " + dapp + " is already registered by another account").c_str());
+          ("the dapp " + dapp + " is already registered by another account").c_str());
 
     uint64_t min_ram = create_escrow::getMinimumRAM();
 

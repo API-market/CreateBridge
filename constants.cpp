@@ -1,7 +1,4 @@
 #pragma once
-
-//#include <eosio/time.hpp>
-
 #include "createescrow.hpp"
 
 namespace createescrow

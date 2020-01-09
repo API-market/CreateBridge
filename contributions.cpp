@@ -1,4 +1,4 @@
-//#include <algorithm>
+#include <eosio/system.hpp>
 #include <cstdlib>
 
 #include "createescrow.hpp"
@@ -87,8 +87,6 @@ void create_escrow::addBalance(const name &from, const asset &quantity, string &
         }
     }
 
-    uint64_t rightnow = std::now();
-
     asset ram_balance = quantity - (net_balance + cpu_balance);
 
     if (iterator == balances.end())
@@ -97,7 +95,7 @@ void create_escrow::addBalance(const name &from, const asset &quantity, string &
             row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
             row.balance = ram_balance;
             row.origin = dapp;
-            row.timestamp = now();
+            row.timestamp = eosio::current_time_point().sec_since_epoch();
         });
     else
         balances.modify(iterator, same_payer, [&](auto &row) {
@@ -116,7 +114,7 @@ void create_escrow::addBalance(const name &from, const asset &quantity, string &
             else
             {
                 row.contributors.push_back({from, ram_balance, ram, net_balance, cpu_balance, totalaccounts, 0});
-                row.timestamp = now();
+                row.timestamp = eosio::current_time_point().sec_since_epoch();
             }
             row.balance += ram_balance;
         });
