@@ -9,8 +9,8 @@ namespace registry
 struct airdropdata
 {
     name contract;
-    asset tokens;
-    asset limit;
+    asset balance;
+    asset amount;
 };
 
 struct rexdata

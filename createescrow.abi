@@ -12,11 +12,11 @@
                     "type": "name"
                 },
                 {
-                    "name": "tokens",
+                    "name": "balance",
                     "type": "asset"
                 },
                 {
-                    "name": "limit",
+                    "name": "amount",
                     "type": "asset"
                 }
             ]

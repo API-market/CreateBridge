@@ -227,18 +227,18 @@ void create_escrow::reclaim(name reclaimer, string dapp, string sym)
         auto iterator = dapps.find(toUUID(dapp));
         if (iterator != dapps.end())
             dapps.modify(iterator, same_payer, [&](auto &row) {
-                if (row.airdrop->contract != name("") && row.airdrop->tokens.symbol.code().to_string() == sym && row.owner == name(reclaimer))
+                if (row.airdrop->contract != name("") && row.airdrop->balance.symbol.code().to_string() == sym && row.owner == name(reclaimer))
                 {
                     auto memo = "reimburse the remaining airdrop balance for " + dapp + " to " + reclaimer.to_string();
-                    if (row.airdrop->tokens != asset(0'0000, row.airdrop->tokens.symbol))
+                    if (row.airdrop->balance != asset(0'0000, row.airdrop->balance.symbol))
                     {
                         action(
                             permission_level{_self, "active"_n},
                             row.airdrop->contract,
                             name("transfer"),
-                            make_tuple(_self, reclaimer, row.airdrop->tokens, memo))
+                            make_tuple(_self, reclaimer, row.airdrop->balance, memo))
                             .send();
-                        row.airdrop->tokens -= row.airdrop->tokens;
+                        row.airdrop->balance = asset(0'0000, row.airdrop->balance.symbol);
                     }
                     else
                     {

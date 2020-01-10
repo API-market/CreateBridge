@@ -17,9 +17,9 @@ void create_escrow::airdrop(string dapp, name account)
             // check if the dapp has opted for airdrop
             if (row.airdrop->contract != name(""))
             {
-                if (row.airdrop->tokens.amount > 0)
+                if (row.airdrop->balance.amount > 0)
                 {
-                    asset tokens = row.airdrop->limit;
+                    asset tokens = row.airdrop->amount;
                     auto memo = "airdrop " + tokens.to_string() + " to " + account.to_string();
                     action(
                         permission_level{_self, "active"_n},
@@ -27,11 +27,11 @@ void create_escrow::airdrop(string dapp, name account)
                         name("transfer"),
                         make_tuple(_self, account, tokens, memo))
                         .send();
-                    row.airdrop->tokens -= tokens;
+                    row.airdrop->balance -= tokens;
                 }
                 else
                 {
-                    check(false, ("Not enough " + row.airdrop->tokens.symbol.code().to_string() + " with createescrow to airdrop.").c_str());
+                    check(false, ("Not enough " + row.airdrop->balance.symbol.code().to_string() + " with createescrow to airdrop for"+ row.dapp +"app").c_str());
                 }
             }
         });
