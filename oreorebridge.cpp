@@ -429,7 +429,8 @@ public:
     }
 
     // to check if createbridge is deployed and functioning
-    ACTION ping(name & from){
+    ACTION ping(name & from)
+    {
         print("ping");
     }
 
@@ -443,7 +444,7 @@ public:
     {
         if (to != _self)
             return;
-        if (from == name("eosio.stake"))
+        if (from == name("eosio.stake") || from == name("eosio.rex"))
         {
             return addTotalUnstaked(quantity);
         };
